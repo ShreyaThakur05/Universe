@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shreya Thakur — Mission: Human Intelligence | Full-Stack & AI/ML Engineer</title>
+<meta name="description" content="Shreya Thakur — Full-Stack & AI/ML engineer at IIIT Nagpur. A playable universe: 10 project planets, a skill galaxy, live GitHub satellites. Board the shuttle." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Outfit:wght@200..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --space:#03060D; --hud:#6FE7FF; --hud-dim:rgba(111,231,255,.45); --hud-line:rgba(111,231,255,.2);
+  --amber:#FFC46B; --green:#8BF0A0; --rose:#FF6B81; --ink:#EAF6FF; --glass:rgba(7,17,30,.82);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--space);color:var(--ink);overflow:hidden;font-family:'Outfit',system-ui,sans-serif;font-weight:300;-webkit-font-smoothing:antialiased}
+.hudfont{font-family:'Chakra Petch',monospace}
+button{font:inherit;color:inherit;background:none;border:none}
+::selection{background:var(--hud);color:#03131C}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#world{position:fixed;inset:0;display:block;touch-action:none}
+html.grabbing #world{cursor:grabbing}
+
+/* cursor tool */
+#tool{position:fixed;left:0;top:0;z-index:300;pointer-events:none;display:none}
+html.cursor-on #tool{display:block}
+html.cursor-on,html.cursor-on button,html.cursor-on a{cursor:none}
+html.cursor-on input,html.cursor-on textarea{cursor:text}
+#tool .ring{position:absolute;width:36px;height:36px;margin:-18px;border:1.5px solid rgba(111,231,255,.85);
+  border-radius:50%;box-shadow:0 0 14px rgba(111,231,255,.3),inset 0 0 8px rgba(111,231,255,.12);
+  transition:transform .18s,border-color .18s}
+#tool .ring::before,#tool .ring::after{content:"";position:absolute;background:var(--amber)}
+#tool .ring::before{left:50%;top:-7px;width:1.5px;height:7px;transform:translateX(-50%)}
+#tool .ring::after{left:50%;bottom:-7px;width:1.5px;height:7px;transform:translateX(-50%)}
+#tool .c{position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#fff;
+  box-shadow:0 0 10px #6FE7FF,0 0 4px #fff}
+#tool .lbl{position:absolute;left:26px;top:22px;font-family:'Chakra Petch';font-size:9px;letter-spacing:.28em;
+  color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .15s;
+  background:var(--glass);border:1px solid var(--hud-line);border-radius:99px;padding:4px 10px;backdrop-filter:blur(6px)}
+#tool.scan .ring{transform:scale(1.45);border-color:var(--amber)}
+#tool.grab .ring{transform:scale(1.15);border-color:var(--amber)}
+#tool.grab .c{background:var(--amber)}
+#tool.ui .ring{transform:scale(.62);border-color:#fff}
+#tool.ui .c{background:var(--amber)}
+#tool.scan .lbl,#tool.grab .lbl,#tool.ui .lbl{opacity:1}
+
+/* intro */
+#intro{position:fixed;inset:0;z-index:100;background:var(--space);display:flex;align-items:center;justify-content:center;transition:opacity 1s,visibility 1s}
+#intro.gone{opacity:0;visibility:hidden}
+.intro-box{width:min(560px,88vw);font-family:'Chakra Petch';font-size:clamp(12px,1.6vw,14.5px);letter-spacing:.14em;line-height:2.3;color:var(--hud)}
+.intro-box .ln{opacity:0;transform:translateY(4px);transition:.4s;white-space:pre-wrap}
+.intro-box .ln.on{opacity:1;transform:none}
+.intro-box .warn{color:var(--rose)} .intro-box .ok{color:var(--green)}
+#enterBtn{margin-top:30px;font-family:'Chakra Petch';font-size:12px;letter-spacing:.34em;color:var(--space);background:var(--hud);padding:15px 30px;border-radius:3px;opacity:0;transition:.4s;box-shadow:0 0 30px rgba(111,231,255,.35)}
+#enterBtn.on{opacity:1} #enterBtn:hover{background:#fff}
+.intro-skip{margin-top:14px;font-size:10px;letter-spacing:.3em;color:var(--hud-dim)}
+
+/* HUD */
+.hud-top{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;pointer-events:none;background:linear-gradient(to bottom,rgba(3,6,13,.85),transparent)}
+.hud-id{font-family:'Chakra Petch';font-size:11px;letter-spacing:.26em;color:var(--hud);line-height:1.9}
+.hud-id .sub{color:var(--hud-dim);font-size:9.5px}
+.hud-right{display:flex;gap:8px;pointer-events:auto}
+.hud-chip{font-family:'Chakra Petch';font-size:10px;letter-spacing:.2em;color:var(--hud);border:1px solid var(--hud-line);background:var(--glass);padding:9px 13px;border-radius:3px;transition:.2s;backdrop-filter:blur(6px)}
+.hud-chip:hover{border-color:var(--hud);box-shadow:0 0 16px rgba(111,231,255,.25)}
+.hud-chip .v{color:var(--amber)}
+#objective{position:fixed;top:74px;left:50%;transform:translateX(-50%);z-index:39;font-family:'Chakra Petch';font-size:10px;letter-spacing:.3em;color:var(--hud-dim);border:1px solid var(--hud-line);background:var(--glass);padding:8px 16px;border-radius:99px;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#objective b{color:var(--amber);font-weight:600}
+
+/* NAV trigger */
+.navdock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:40;display:flex;gap:8px}
+#navBtn{font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.3em;color:var(--space);background:var(--hud);padding:15px 26px;border-radius:6px;box-shadow:0 0 26px rgba(111,231,255,.3);transition:.2s}
+#navBtn:hover{background:#fff;box-shadow:0 0 36px rgba(111,231,255,.5)}
+#navBtn small{display:block;font-size:8px;letter-spacing:.34em;font-weight:400}
+
+/* ═══ NAV COMPUTER overlay ═══ */
+#nav{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(2,5,11,.72);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+#nav.open{opacity:1;visibility:visible}
+.nav-shell{width:min(900px,94vw);max-height:90vh;overflow:auto;border:1px solid var(--hud-line);border-radius:12px;background:var(--glass);box-shadow:0 0 0 1px rgba(111,231,255,.06),0 30px 80px rgba(0,0,0,.6);position:relative}
+.nav-shell::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 3px,rgba(111,231,255,.02) 3px 4px);border-radius:12px}
+.nav-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--hud-line)}
+.nav-head .t{font-family:'Chakra Petch';font-weight:600;font-size:13px;letter-spacing:.3em;color:var(--hud)}
+.nav-head .sweepdot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+.nav-head .x{margin-left:auto;font-family:'Chakra Petch';font-size:11px;letter-spacing:.2em;color:var(--hud-dim);border:1px solid var(--hud-line);border-radius:4px;padding:6px 10px;transition:.2s}
+.nav-head .x:hover{color:var(--rose);border-color:var(--rose)}
+.nav-grid{display:grid;grid-template-columns:340px 1fr;gap:0}
+/* radar */
+.radar-pane{padding:22px;border-right:1px solid var(--hud-line);display:flex;flex-direction:column;align-items:center;gap:14px}
+.radar{position:relative;width:280px;height:280px;border-radius:50%;border:1px solid var(--hud-line);
+  background:radial-gradient(circle,rgba(111,231,255,.05),transparent 70%)}
+.radar .gridc{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(111,231,255,.14)}
+.radar .gridc.c2{inset:18%} .radar .gridc.c3{inset:36%}
+.radar .axis{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(111,231,255,.1)}
+.radar .axis.h{left:0;right:0;top:50%;bottom:auto;height:1px;width:auto}
+.radar .sweep{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(rgba(111,231,255,.22),transparent 18%);animation:sweep 3.2s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.blip{position:absolute;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:var(--hud);box-shadow:0 0 10px var(--hud);transition:.2s}
+.blip.amber{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.blip.green{background:var(--green);box-shadow:0 0 10px var(--green)}
+.blip .nm{position:absolute;left:11px;top:-3px;font-family:'Chakra Petch';font-size:8px;letter-spacing:.16em;color:var(--hud-dim);white-space:nowrap}
+.blip.you{background:#fff;box-shadow:0 0 12px #fff;width:7px;height:7px;margin:-3.5px}
+/* target lock brackets */
+.lock{position:absolute;width:30px;height:30px;margin:-15px;pointer-events:none;opacity:0;transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.lock.on{opacity:1;animation:lockpulse 1.2s ease-in-out infinite}
+@keyframes lockpulse{50%{transform:scale(1.18)}}
+.lock i{position:absolute;width:9px;height:9px;border:1.5px solid var(--amber)}
+.lock i:nth-child(1){left:0;top:0;border-right:none;border-bottom:none}
+.lock i:nth-child(2){right:0;top:0;border-left:none;border-bottom:none}
+.lock i:nth-child(3){left:0;bottom:0;border-right:none;border-top:none}
+.lock i:nth-child(4){right:0;bottom:0;border-left:none;border-top:none}
+.telemetry{width:100%;font-family:'Chakra Petch';font-size:10px;letter-spacing:.18em;color:var(--hud-dim);display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.telemetry b{color:var(--hud);font-weight:400}
+/* destination list */
+.dest-pane{padding:14px}
+.dest{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;
+  padding:13px 14px;border:1px solid transparent;border-radius:8px;transition:.2s;margin-bottom:4px}
+.dest:hover{border-color:var(--hud-line);background:rgba(111,231,255,.05)}
+.dest.locked{border-color:var(--amber);background:rgba(255,196,107,.07);box-shadow:0 0 18px rgba(255,196,107,.12)}
+.dest .key{font-family:'Chakra Petch';font-size:10px;color:var(--hud-dim);border:1px solid var(--hud-line);border-radius:4px;padding:5px 0;text-align:center}
+.dest .nm{font-family:'Chakra Petch';font-size:12px;letter-spacing:.18em;color:var(--ink)}
+.dest .ty{font-size:10px;letter-spacing:.22em;color:var(--hud-dim);font-family:'Chakra Petch'}
+.dest .dist{font-family:'Chakra Petch';font-size:10px;letter-spacing:.14em;color:var(--hud);text-align:right;line-height:1.7}
+.dest .st{color:var(--green);font-size:8.5px;letter-spacing:.26em}
+.dest .st.unv{color:var(--amber)}
+.engage-row{display:flex;gap:10px;align-items:center;padding:12px 14px 16px}
+#engage{flex:1;font-family:'Chakra Petch';font-weight:700;font-size:13px;letter-spacing:.4em;color:var(--space);background:var(--amber);padding:17px;border-radius:8px;transition:.25s;opacity:.35;pointer-events:none}
+#engage.ready{opacity:1;pointer-events:auto;animation:engpulse 1.6s infinite}
+#engage.ready:hover{background:#FFD795;box-shadow:0 0 30px rgba(255,196,107,.5)}
+@keyframes engpulse{50%{box-shadow:0 0 26px rgba(255,196,107,.45)}}
+.eng-note{font-family:'Chakra Petch';font-size:9px;letter-spacing:.22em;color:var(--hud-dim);max-width:160px;line-height:1.8}
+
+/* hologram panel (content) */
+#panel{position:fixed;right:18px;top:84px;bottom:90px;z-index:45;width:min(440px,calc(100vw - 36px));border:1px solid var(--hud-line);border-radius:10px;background:var(--glass);backdrop-filter:blur(14px);transform:translateX(calc(100% + 30px));transition:transform .55s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 0 1px rgba(111,231,255,.06),0 20px 60px rgba(0,0,0,.55)}
+#panel.open{transform:none}
+#panel::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:repeating-linear-gradient(transparent 0 3px,rgba(111,231,255,.025) 3px 4px)}
+.panel-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--hud-line)}
+.panel-head .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:blink 2s infinite}
+.panel-head .t{font-family:'Chakra Petch';font-size:12px;letter-spacing:.26em;color:var(--hud)}
+.panel-head .x{margin-left:auto;font-family:'Chakra Petch';font-size:11px;letter-spacing:.2em;color:var(--hud-dim);border:1px solid var(--hud-line);border-radius:4px;padding:6px 10px;transition:.2s}
+.panel-head .x:hover{color:var(--rose);border-color:var(--rose)}
+.panel-body{padding:20px;overflow-y:auto;scrollbar-width:thin;flex:1}
+.panel-body h2{font-family:'Chakra Petch';font-weight:600;font-size:clamp(20px,2.4vw,26px);color:var(--ink);margin-bottom:4px}
+.panel-body .sub{font-family:'Chakra Petch';font-size:10px;letter-spacing:.3em;color:var(--amber);margin-bottom:16px}
+.panel-body p{color:#B9CFE0;font-size:14.5px;line-height:1.75;margin-bottom:14px}
+.panel-body p b{color:var(--ink);font-weight:500}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:10px 0;border-top:1px dashed var(--hud-line);font-size:13.5px}
+.kv .k{font-family:'Chakra Petch';font-size:9.5px;letter-spacing:.26em;color:var(--hud);padding-top:3px}
+.kv .v{color:#B9CFE0}
+.moons{display:flex;gap:8px;flex-wrap:wrap}
+.moon{font-family:'Chakra Petch';font-size:9.5px;letter-spacing:.18em;color:var(--hud);border:1px solid var(--hud-line);padding:5px 10px;border-radius:99px}
+.sats{display:flex;gap:22px;flex-wrap:wrap;margin:14px 0;padding:14px 0;border-top:1px dashed var(--hud-line);border-bottom:1px dashed var(--hud-line)}
+.sat .v{font-family:'Chakra Petch';font-weight:600;font-size:22px}
+.sat .k{font-family:'Chakra Petch';font-size:9px;letter-spacing:.24em;color:var(--hud-dim);text-transform:uppercase}
+.hbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.hbtn{font-family:'Chakra Petch';font-size:10px;letter-spacing:.22em;color:var(--space);background:var(--hud);padding:12px 18px;border-radius:4px;text-decoration:none;transition:.2s}
+.hbtn:hover{background:#fff;box-shadow:0 0 18px rgba(111,231,255,.4)}
+.hbtn.ghost{background:none;color:var(--hud);border:1px solid var(--hud-line)}
+.hbtn.ghost:hover{border-color:var(--hud)}
+.cab{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.cab button{border:1px solid var(--hud-line);border-radius:8px;padding:14px 12px;text-align:left;transition:.2s;background:rgba(111,231,255,.03)}
+.cab button:hover{border-color:var(--hud);box-shadow:0 0 14px rgba(111,231,255,.18);transform:translateY(-2px)}
+.cab .ico{font-size:20px;display:block;margin-bottom:6px}
+.cab .nm{font-family:'Chakra Petch';font-size:10px;letter-spacing:.2em;color:var(--hud)}
+.cab-reveal{margin-top:14px;min-height:60px;border:1px dashed var(--hud-line);border-radius:8px;padding:14px;color:#B9CFE0;font-size:13.5px;line-height:1.7}
+.mission{border:1px solid var(--hud-line);border-radius:8px;padding:14px 16px;margin-bottom:12px;background:rgba(111,231,255,.03)}
+.mission .st{font-family:'Chakra Petch';font-size:9px;letter-spacing:.26em;color:var(--green)}
+.mission h3{font-family:'Chakra Petch';font-weight:600;font-size:15px;margin:5px 0 1px}
+.mission .org{font-family:'Chakra Petch';font-size:10px;letter-spacing:.18em;color:var(--hud-dim)}
+.mission ul{list-style:none;margin-top:9px}
+.mission li{color:#B9CFE0;font-size:13px;padding-left:16px;position:relative;margin-bottom:6px}
+.mission li::before{content:"▸";position:absolute;left:0;color:var(--amber);font-size:10px;top:2px}
+.field{margin-bottom:12px}
+.field label{display:block;font-family:'Chakra Petch';font-size:9.5px;letter-spacing:.26em;color:var(--hud);margin-bottom:6px}
+.field input,.field textarea{width:100%;background:rgba(111,231,255,.05);border:1px solid var(--hud-line);border-radius:6px;color:var(--ink);font:inherit;font-size:14px;padding:11px 13px;outline:none;transition:.2s}
+.field input:focus,.field textarea:focus{border-color:var(--hud);box-shadow:0 0 14px rgba(111,231,255,.15)}
+.field textarea{min-height:110px;resize:vertical}
+.transmit{width:100%;font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.34em;color:var(--space);background:var(--amber);padding:16px;border-radius:6px;transition:.25s;margin-top:4px}
+.transmit:hover{background:#FFD795;box-shadow:0 0 24px rgba(255,196,107,.45)}
+
+#bubble{position:fixed;z-index:44;max-width:250px;background:var(--glass);border:1px solid var(--hud-line);backdrop-filter:blur(8px);border-radius:10px;padding:10px 13px;font-size:12.5px;color:#CFE7F5;line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none}
+#bubble.show{opacity:1;transform:none}
+#bubble .who{font-family:'Chakra Petch';font-size:8.5px;letter-spacing:.3em;color:var(--green);display:block;margin-bottom:3px}
+#toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,90px);z-index:70;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--hud-line);color:var(--ink);font-family:'Chakra Petch';font-size:11px;letter-spacing:.2em;padding:13px 22px;border-radius:99px;transition:transform .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 24px rgba(111,231,255,.18);text-align:center;max-width:92vw}
+#toast.show{transform:translate(-50%,0)}
+#toast b{color:var(--amber)}
+
+.cine{position:fixed;left:0;right:0;height:0;background:#000;z-index:75;transition:height .7s cubic-bezier(.2,.8,.2,1)}
+.cine.top{top:0}.cine.bot{bottom:0}
+html.cinema .cine{height:9vh}
+html.cinema .hud-top,html.cinema .navdock,html.cinema #objective{opacity:0;pointer-events:none;transition:opacity .4s}
+.hud-top,.navdock,#objective{transition:opacity .4s}
+#bubble .wave{display:none;gap:2.5px;align-items:flex-end;height:10px;margin-left:8px;vertical-align:middle}
+#bubble.her .wave{display:inline-flex}
+#bubble .wave i{width:2.5px;background:var(--hud);border-radius:2px;animation:wv .7s ease-in-out infinite}
+#bubble .wave i:nth-child(1){height:4px}
+#bubble .wave i:nth-child(2){height:9px;animation-delay:.12s}
+#bubble .wave i:nth-child(3){height:6px;animation-delay:.24s}
+#bubble .wave i:nth-child(4){height:10px;animation-delay:.36s}
+@keyframes wv{50%{transform:scaleY(.35)}}
+#bubble.her .who{color:var(--hud)}
+.pass-img{width:100%;border-radius:10px;border:1px solid var(--hud-line);box-shadow:0 0 30px rgba(111,231,255,.15);margin-bottom:14px}
+.dishbar{height:14px;border:1px solid var(--hud-line);border-radius:99px;overflow:hidden;margin:10px 0 16px}
+.dishbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--rose),var(--amber),var(--green));transition:width .1s}
+input[type=range].dial{width:100%;accent-color:var(--amber)}
+@media (max-width:860px){
+  .nav-grid{grid-template-columns:1fr}
+  .radar-pane{border-right:none;border-bottom:1px solid var(--hud-line)}
+  .hud-id .sub{display:none}
+  #panel{left:10px;right:10px;width:auto;top:auto;bottom:84px;max-height:60vh}
+  #objective{display:none}
+  .dest .key{display:none}
+  .dest{grid-template-columns:1fr auto}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="cine top" aria-hidden="true"></div><div class="cine bot" aria-hidden="true"></div>
+<canvas id="world" aria-label="Interactive space universe. Open the NAV COMPUTER to travel, or the Mission Dossier for a plain-text version."></canvas>
+<div id="tool" aria-hidden="true"><span class="ring"></span><span class="c"></span><span class="lbl"></span></div>
+
+<div id="intro">
+  <div class="intro-box" role="dialog" aria-label="Mission briefing">
+    <div class="ln">> DEEP SPACE RELAY 7 — LISTENING.................</div>
+    <div class="ln warn">> ! DISTRESS SIGNAL DETECTED — SECTOR HX-26</div>
+    <div class="ln">> SOURCE: RESEARCH STATION "INTELLECT-01"</div>
+    <div class="ln ok">> LIFE SIGNS: 1 — ENGINEER: <span id="introName">[YOUR NAME]</span></div>
+    <div class="ln">> MISSION: BOARD. EXPLORE. RECOVER HER WORK.</div>
+    <button id="enterBtn" class="hudfont">BEGIN MISSION ▸</button>
+    <div class="intro-skip hudfont">CLICK ANYWHERE TO SKIP BRIEFING</div>
+  </div>
+</div>
+
+<div class="hud-top">
+  <div class="hud-id hudfont">MISSION: HUMAN INTELLIGENCE
+    <div class="sub">STATION INTELLECT-01 · ENGINEER: <span id="hudName">[YOUR NAME]</span> · STATUS: <span style="color:var(--green)">ALIVE & SHIPPING</span></div>
+  </div>
+  <div class="hud-right">
+    <button class="hud-chip" id="rankChip">◈ <span class="v" id="rankNm">CADET</span> · <span id="rankPct">0</span>%</button>
+    <button class="hud-chip" id="fragChip">✦ <span class="v" id="fragCount">0</span>/5</button>
+    <button class="hud-chip" id="passBtn">🎫 BOARDING PASS</button>
+    <button class="hud-chip" id="sndBtn" aria-pressed="false">SOUND: OFF</button>
+    <button class="hud-chip" id="dossierBtn">DOSSIER</button>
+  </div>
+</div>
+
+<div id="objective" class="hudfont">OBJECTIVE — <b>OPEN NAV COMPUTER</b> · or drag to fly free · click anything that glows</div>
+
+<div class="navdock">
+  <button id="navBtn" class="hudfont">◈ NAV COMPUTER<small>SELECT DESTINATION · [N]</small></button>
+</div>
+
+<!-- NAV COMPUTER -->
+<div id="nav" role="dialog" aria-label="Navigation computer">
+  <div class="nav-shell">
+    <div class="nav-head">
+      <span class="sweepdot"></span>
+      <span class="t">NAV COMPUTER ▸ DESTINATION SELECT</span>
+      <button class="x hudfont" id="navClose">CLOSE [ESC]</button>
+    </div>
+    <div class="nav-grid">
+      <div class="radar-pane">
+        <div class="radar" id="radar">
+          <div class="gridc"></div><div class="gridc c2"></div><div class="gridc c3"></div>
+          <div class="axis"></div><div class="axis h"></div>
+          <div class="sweep"></div>
+          <div class="lock" id="lockBr"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="telemetry" id="telem">
+          <span>VESSEL <b>SHUTTLE "CURIOSITY-II"</b></span><span>FUEL <b id="tFuel">98.2%</b></span>
+          <span>TARGET <b id="tTarget">—</b></span><span>DIST <b id="tDist">—</b></span>
+          <span>ETA <b id="tEta">—</b></span><span>VECTOR <b id="tVec">—</b></span>
+        </div>
+      </div>
+      <div class="dest-pane" id="destList"></div>
+    </div>
+    <div class="engage-row">
+      <button id="engage" class="hudfont">▲ ENGAGE THRUSTERS ▲</button>
+      <span class="eng-note hudfont">LOCK A TARGET, THEN ENGAGE. SHUTTLE WILL AUTO-DOCK ON ARRIVAL.</span>
+    </div>
+  </div>
+</div>
+
+<aside id="panel" aria-live="polite">
+  <div class="panel-head"><span class="dot"></span><span class="t hudfont" id="panelTitle">HOLOGRAM</span>
+  <button class="x hudfont" id="panelClose">CLOSE ✕</button></div>
+  <div class="panel-body" id="panelBody"></div>
+</aside>
+
+<div id="bubble" aria-hidden="true"><span class="who hudfont" id="bubbleWho">LUMEN · COMPANION</span><span id="bubbleTxt"></span><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+<div id="toast" role="status"></div>
+<script>
+/* ═════════════════════════════════════════════════════════
+   EDIT EVERYTHING HERE — mission data.
+   ═════════════════════════════════════════════════════════ */
+const DATA = {
+  name:"Shreya Thakur", initials:"ST", callsign:"CMDR. SHREYA",
+  pronoun:"she",
+  suitAccent:"#FF7A59",
+  skin:"#E8B89B", hair:"#2E2018", eyes:"#4A3526", lips:"#C96A6A",
+  alienName:"LUMEN",
+  email:"shreyathakurindia@gmail.com",
+  phone:"+91 86688 06190",
+  github:"https://github.com/ShreyaThakur05",
+  githubUser:"ShreyaThakur05",
+  linkedin:"https://www.linkedin.com/in/shreya-thakur-734097282/",
+  leetcode:"https://leetcode.com/u/shreyathakur0503",
+  resume:"Shreya_Thakur_Resume.pdf",
+  photo:"shreya.jpg",  /* drop your photo next to this file with this name (square or 4:5 looks best) */
+  role:"Full-Stack & AI/ML Engineer",
+  tagline:"I build across the whole stack — React frontends, Go & Node backends, and AI systems from RAG pipelines to LLM agents. B.Tech CSE @ IIIT Nagpur (CGPA 8.95) + parallel B.Sc in Data Science @ IIT Madras.",
+  avail:"Open to internships, full-time roles & collaborations",
+  heroLine:"Hi, I'm Shreya! I build full-stack apps and AI systems up here. Open the NAV computer — every planet is something I shipped. And yes, LUMEN is friendly.",
+  cabin:[
+    {ico:"📓",nm:"LOGBOOK",txt:"Third-year CSE at IIIT Nagpur, simultaneously doing IIT Madras' B.Sc in Programming & Data Science — because one degree's worth of building wasn't enough. I fell for engineering the first time code I wrote did something real for someone else, and I've been shipping ever since: web apps, ML pipelines, AI agents, event platforms."},
+    {ico:"🎓",nm:"DIPLOMAS",txt:"B.Tech Computer Science @ IIIT Nagpur — CGPA 8.95. Plus a parallel B.Sc in Programming & Data Science from IIT Madras. Two institutes, one very full calendar."},
+    {ico:"🏆",nm:"TROPHIES",txt:"Selected for Amazon ML Summer School — top 5% of 60,000+ applicants nationwide, trained by Amazon scientists. Runner-Up at Women in Dev 2024 for AASA, a real-time safety platform with anonymous peer chat and danger-zone heatmaps."},
+    {ico:"⚔️",nm:"TERMINAL",txt:"LeetCode Knight — 500+ problems solved, max rating 2006, top 5% globally. CodeChef 3-star (1652). I genuinely enjoy a hard problem at midnight."},
+    {ico:"🛰️",nm:"COMMAND SEAT",txt:"Lead Organiser of WomenInDev 2.0 at IIIT Nagpur — built the official platform AND ran logistics for 200+ attendees: transport, judges, prizes, everything. Shipping software and shipping events use the same muscle."},
+    {ico:"🧪",nm:"LAB BENCH",txt:"Currently deep in GenAI engineering — production RAG pipelines with GPT-4o + Pinecone, hybrid retrieval, semantic caching, hallucination guards. The frontier is the fun part."},
+    {ico:"🗺️",nm:"STAR MAP",txt:"Based in Nagpur, India — open to remote work and relocation. Eager to meet builders everywhere: if you're reading this, the COMMS array is open."},
+    {ico:"🌱",nm:"PLANT",txt:"Off-duty: painting, sketching, and drawing — analogue calm between digital sprints. Reading books (always has one on the go). Experimenting with whatever AI tool just dropped. The plant is doing fine, thanks for asking."}
+  ],
+  planets:[
+    { name:"SYNTAXEYE", ty:"AI TOOL", sub:"AI-powered code review with realtime Gemini feedback", hue:204,
+      desc:"Write code in a live editor and get instant, meaningful review — logic, structure, errors, security, best practices — generated by Google Gemini and rendered as clean Markdown.",
+      stack:["React 19","Node.js","Express","PrismJS","Gemini API"],
+      sats:[{v:"LIVE",k:"feedback"},{v:"Gemini",k:"AI core"},{v:"MD",k:"rendered"}],
+      challenge:"Turning a raw LLM into a reviewer that gives structured, trustworthy feedback instead of vague prose.",
+      solution:"Structured prompting through a Node/Express layer, with responses constrained to reviewable categories and rendered via react-markdown + rehype-highlight.",
+      impact:"Real-time review on correctness, performance and security vulnerabilities, in a polished live-editor UX.",
+      greet:"Her AI code reviewer. It judges code so humans don't have to.",
+      live:"https://github.com/ShreyaThakur05/syntax-eye", code:"https://github.com/ShreyaThakur05/syntax-eye" },
+    { name:"SCHEDULO", ty:"FULL-STACK", sub:"Calendly-style scheduling with 2-way Google Calendar sync", hue:262,
+      desc:"Share your availability, let anyone book in seconds — no email back-and-forth. Event types, availability rules with date overrides, public booking pages, email notifications and a booking analytics dashboard.",
+      stack:["React 19","Node.js","Express","Prisma","MySQL","Google Calendar API"],
+      sats:[{v:"2-WAY",k:"GCal sync"},{v:"0",k:"email ping-pong"},{v:"LIVE",k:"on Vercel"}],
+      challenge:"Reliable two-way sync with Google Calendar while handling availability rules, overrides and timezone edge cases.",
+      solution:"Prisma-modelled scheduling domain with rule evaluation on the server and the Calendar API as the source of truth for conflicts.",
+      impact:"A complete booking product: from public page to confirmed, synced, notified meeting — plus analytics.",
+      greet:"Her scheduling platform. It ended the 'does 3pm work?' wars.",
+      live:"https://schedulo-chi.vercel.app", code:"https://github.com/ShreyaThakur05/Schedulo" },
+    { name:"RAG DOC-QA", ty:"AI / GENAI", sub:"Production-grade RAG pipeline for multi-format document QA", hue:158,
+      desc:"An intelligent document question-answering system built on GPT-4o and Pinecone, with OCR fallback for scanned inputs, semantic + exact caching in MongoDB, and vector chunking for efficient retrieval.",
+      stack:["Python","GPT-4o","Pinecone","LangChain","MongoDB","OCR"],
+      sats:[{v:"-40%",k:"review time"},{v:"GPT-4o",k:"LLM"},{v:"2-tier",k:"caching"}],
+      challenge:"Scanned, messy, multi-format documents — and the cost of hitting the LLM for every repeated question.",
+      solution:"OCR fallback in the ingestion path, plus semantic + exact caching with MongoDB to cut redundant LLM calls.",
+      impact:"Reduced manual document review time by 40% with grounded, retrieval-backed answers.",
+      greet:"Her RAG pipeline. It reads the documents nobody wants to.",
+      live:"https://et-genai-platform.vercel.app", code:"https://github.com/ShreyaThakur05/bajaj_finserv" },
+    { name:"SHL RECOMMENDER", ty:"AI AGENT", sub:"Conversational agent for grounded assessment shortlists", hue:38,
+      desc:"Takes a recruiter from a vague hiring intent to a grounded shortlist of SHL assessments through multi-turn dialogue — it clarifies, recommends, refines, compares, and refuses off-topic queries.",
+      stack:["FastAPI","FAISS + BM25","Groq · Llama 3.3 70B","Docker","Render"],
+      sats:[{v:"HYBRID",k:"retrieval"},{v:"70B",k:"LLM"},{v:"0",k:"hallucinated picks"}],
+      challenge:"LLMs love inventing plausible-sounding assessments that don't exist.",
+      solution:"A hallucination guard that validates every recommendation against the real catalog, on top of FAISS + BM25 hybrid search.",
+      impact:"A trustworthy multi-turn agent: every shortlist item is verifiably real, every refinement stays grounded.",
+      greet:"Her hiring agent. It never makes things up — rare, for an AI.",
+      live:"https://github.com/ShreyaThakur05/SHL_assignment", code:"https://github.com/ShreyaThakur05/SHL_assignment" },
+    { name:"COMMENT-ML", ty:"MACHINE LEARNING", sub:"Kaggle comment-category prediction · Macro F1 0.817", hue:318,
+      desc:"End-to-end ML classification on 198,000 samples: data exploration, preprocessing, TF-IDF feature engineering (50K features), 20+ metadata features, and model comparison across XGBoost/LightGBM.",
+      stack:["Python","LightGBM","XGBoost","TF-IDF","scikit-learn"],
+      sats:[{v:"0.817",k:"macro F1"},{v:"198k",k:"samples"},{v:"+7%",k:"vs baseline"}],
+      challenge:"57.66% class imbalance and noisy free-text comments.",
+      solution:"Balanced class weighting, 3-fold stratified CV, and 20+ engineered metadata features — temporal signals, vote ratios, demographic flags.",
+      impact:"Best public leaderboard score of 0.8169, ~7% above baselines.",
+      greet:"Her Kaggle battleground. The leaderboard remembers her.",
+      live:"https://purplle-ml-challenge.vercel.app", code:"https://github.com/ShreyaThakur05/Comment_Category_Prediction" },
+    { name:"SMART TASKS", ty:"AI + PRODUCT", sub:"Kanban board where natural language becomes tasks", hue:188,
+      desc:"A modern task manager around a drag-and-drop Kanban board with custom workflow stages. Say \"create urgent bug fix due tomorrow\" and Gemini parses it into a structured task. Dark mode, smooth animations, local persistence.",
+      stack:["Next.js 14","TypeScript","Tailwind","Framer Motion","Zustand","DnD Kit","Gemini"],
+      sats:[{v:"NL→TASK",k:"AI parsing"},{v:"DnD",k:"kanban"},{v:"LIVE",k:"on Vercel"}],
+      challenge:"Free-form human language → reliable structured tasks with priority, dates and labels.",
+      solution:"Gemini with a strict parsing contract feeding a Zustand store, wrapped in a motion-polished DnD interface.",
+      impact:"Task creation that feels like talking, in a product-grade UI.",
+      greet:"Her task manager. Tell it your chaos; it makes columns.",
+      live:"https://smart-task-manager-bq7u.vercel.app", code:"https://github.com/ShreyaThakur05/smart-task-manager" },
+    { name:"STITCH & SAVOUR", ty:"E-COMMERCE", sub:"Complete storefront + admin for a real home business", hue:8,
+      desc:"Full e-commerce for homemade food and handcrafted crochet: catalog search, product customization, cart, UPI/QR + COD checkout, reviews, wishlist — plus an admin dashboard with analytics, inventory, order management, an AI chatbot, and WhatsApp/email/PDF/Excel integrations.",
+      stack:["React.js","Node.js","JWT","EmailJS","jsPDF","XLSX"],
+      sats:[{v:"2-SIDED",k:"store+admin"},{v:"UPI/QR",k:"payments"},{v:"LIVE",k:"on Vercel"}],
+      challenge:"One codebase serving customers, an admin, and a dozen real-world integrations.",
+      solution:"Clean role separation with JWT auth, and integration adapters for WhatsApp, email, PDF invoices and Excel exports.",
+      impact:"A real business runs on it — from customization request to delivered order.",
+      greet:"Her e-commerce platform. Real shop, real orders, real crochet.",
+      live:"https://stitchandsavourfrontend.vercel.app", code:"https://github.com/ShreyaThakur05/stitch_and_savour" },
+    { name:"WOMENINDEV 2.0", ty:"PLATFORM + LEADERSHIP", sub:"Official hackathon platform for 200+ attendees", hue:286,
+      desc:"Phase-aware event platform that adapts across registration, shortlisting and finals: public pages, interactive timeline, shortlisted-team displays, and an authenticated role-based area with personalized dashboards and a controlled problem-statement portal.",
+      stack:["Next.js 14","React 18","TypeScript","Tailwind","MongoDB","JWT"],
+      sats:[{v:"200+",k:"attendees"},{v:"3",k:"event phases"},{v:"LEAD",k:"organiser"}],
+      challenge:"One site serving three completely different moments of an event — without redeploys mid-hackathon.",
+      solution:"Phase-aware content engine + role-based auth, so the platform reshapes itself as the event progresses.",
+      impact:"Powered the entire WomenInDev 2.0 hackathon — which she also lead-organised end to end.",
+      greet:"Her hackathon platform. She built it AND ran the whole event.",
+      live:"https://womenindev.vercel.app", code:"https://github.com/ShreyaThakur05/womenindev" },
+    { name:"OPPORTUNITYHUB", ty:"FULL-STACK", sub:"Campus placement portal with 3-role access", hue:130,
+      desc:"Placement management for the placement cell, companies, and students: drive approvals, application tracking, resume uploads, duplicate-application prevention, search, and placement statistics with visual charts.",
+      stack:["Flask","SQLite","Jinja2","Bootstrap 5","Chart.js"],
+      sats:[{v:"3",k:"user roles"},{v:"-35%",k:"query time"},{v:"REST",k:"endpoints"}],
+      challenge:"Three user types, strict access rules, and slow queries on a growing relational dataset.",
+      solution:"Normalized schema with constraints and indexing (35% faster queries), session auth, input validation, role-based RESTful endpoints.",
+      impact:"A complete placement workflow from company approval to offer statistics.",
+      greet:"Her placement portal. Three roles, zero chaos.",
+      live:"https://github.com/ShreyaThakur05/OpportunityHub", code:"https://github.com/ShreyaThakur05/OpportunityHub" },
+    { name:"INTERACTIVE CALENDAR", ty:"FRONTEND CRAFT", sub:"A wall calendar with five themes and a widget ecosystem", hue:52,
+      desc:"Drag-to-select date ranges, per-date and monthly notes, holiday indicators and smooth animations — plus year-progress, an Earth-orbit diagram, zodiac strips, historical-fact badges, and glassmorphic popups across five switchable themes.",
+      stack:["React 19","TypeScript","Vite","CSS Modules"],
+      sats:[{v:"5",k:"themes"},{v:"7+",k:"widgets"},{v:"LIVE",k:"on Vercel"}],
+      challenge:"Making a calendar — the most-solved UI in history — feel genuinely delightful.",
+      solution:"Obsessive interaction design: drag ranges, animated transitions, a widget ecosystem, glassmorphism done with restraint.",
+      impact:"The kind of frontend craft that makes people hover everything just to see what happens.",
+      greet:"Her calendar. Yes, a calendar. Wait till you touch it.",
+      live:"https://interactive-calendar-five-mu.vercel.app", code:"https://github.com/ShreyaThakur05/Interactive_Calendar" },
+    { name:"IVY", ty:"AI / VOICE", sub:"AI interview coach with real-time voice cloning", hue:168,
+      desc:"Three specialized AI interviewer personas — Technical, HR, and Product. Record 60 seconds of audio and the system clones your voice for personalized feedback. Speech-to-speech conversations with sub-2.5-second latency on real interview questions.",
+      stack:["Next.js 14","FastAPI","Groq Whisper","Gemini 1.5 Flash","ElevenLabs","Supabase","PostgreSQL"],
+      sats:[{v:"3",k:"AI personas"},{v:"<2.5s",k:"voice latency"},{v:"CLONE",k:"your voice"}],
+      challenge:"Getting speech-to-speech round trips to feel like a real conversation, not a laggy demo.",
+      solution:"Groq Whisper for fast STT, Gemini 1.5 Flash for responses, ElevenLabs for voice synthesis — fastest option at each stage, chained together.",
+      impact:"A full AI interview coach: pick your interviewer type, speak freely, get a reply in your own cloned voice.",
+      greet:"Her AI interview coach. It asks the hard questions — in your own voice.",
+      live:"https://ivy-rose.vercel.app", code:"https://github.com/ShreyaThakur05/IVY1" },
+    { name:"FINANCE TRACKER", ty:"FULL-STACK", sub:"Production-grade personal finance with 3-role RBAC", hue:145,
+      desc:"Role-based finance management: viewers see summaries, analysts run reports and export CSV, admins manage transactions. JWT with 15-min/7-day token strategy and silent auto-refresh, monthly trends, category breakdowns, audit logging, and Docker deployment with pre-seeded demo data.",
+      stack:["FastAPI","React 18","SQLAlchemy","Alembic","Recharts","TanStack Query","Docker"],
+      sats:[{v:"3",k:"access roles"},{v:"26",k:"pytest tests"},{v:"DOCKER",k:"containerized"}],
+      challenge:"Designing a finance system where the same data looks completely different to three user types — without duplicating logic.",
+      solution:"SQLAlchemy models with soft-delete, role-enforced API endpoints, and one React app that renders based on JWT claims.",
+      impact:"A deployable finance system with real test coverage (26 pytest cases), decimal precision, and a swap-ready database backend.",
+      greet:"Her finance tracker. Three roles, one codebase, zero budget leaks.",
+      live:"https://finance-system-alpha.vercel.app", code:"https://github.com/ShreyaThakur05/Finance_System" },
+    { name:"INTERN ALLOCATOR", ty:"AI / OPTIMIZATION", sub:"Govt-quota-compliant internship matching with ML + ILP", hue:220,
+      desc:"Matches 1,000 students to internship positions while enforcing Indian government reservation quotas (SC 15%, ST 7.5%, OBC 27%, Aspirational Districts 20%). XGBoost scores each student-role pair; integer linear programming finds the globally optimal allocation.",
+      stack:["Python","Flask","MongoDB Atlas","XGBoost","Sentence Transformers","PuLP ILP"],
+      sats:[{v:"1000",k:"students"},{v:"4",k:"quota types"},{v:"ILP",k:"optimizer"}],
+      challenge:"Satisfying multiple hard quota constraints while maximising overall match quality — a multi-objective combinatorial problem.",
+      solution:"ILP (PuLP solver) with quota constraints as hard inequalities, seeded by XGBoost match scores and Sentence Transformer skill embeddings.",
+      impact:"Fair, auditable internship allocation that satisfies government compliance requirements and maximises student-role fit simultaneously.",
+      greet:"Her allocation engine. Fair by law, optimal by math.",
+      live:"https://pminternship-seven.vercel.app", code:"https://github.com/ShreyaThakur05/PMINTERNSHIP" },
+    { name:"GROW THERAPY", ty:"FRONTEND", sub:"Therapy clinic website with Framer Motion design", hue:176,
+      desc:"Professional website for a therapy practice: fully responsive across all breakpoints, animated section reveals via Framer Motion, interactive collapsible content, inquiry form with validation, and local SEO targeting. Oceanic palette — deep teal, warm beige, sage — with Playfair Display typography.",
+      stack:["Next.js 14","TypeScript","Tailwind CSS","Framer Motion"],
+      sats:[{v:"100%",k:"responsive"},{v:"SEO",k:"local optimised"},{v:"MOTION",k:"reveal animations"}],
+      challenge:"Making a mental health website feel calm, trustworthy, and human — not clinical or template-generic.",
+      solution:"Restrained motion only on scroll, a palette built around calm rather than brand, and copy-first structure with collapsible depth.",
+      impact:"A production-ready client site demonstrating frontend craft applied to real-world design constraints.",
+      greet:"Her therapy site. Calm design, real client brief.",
+      live:"https://grow-therapy-tawny.vercel.app", code:"https://github.com/ShreyaThakur05/grow_therapy" },
+    { name:"CRESCENDO", ty:"FULL-STACK", sub:"Music club booking platform with WhatsApp alerts", hue:295,
+      desc:"Booking management for IIIT Nagpur's music club: practice room reservations with real-time conflict detection, event calendar, competition tracking, automated WhatsApp confirmations via Twilio, CSV export, and a stats dashboard.",
+      stack:["React 18","Vite","Node.js","Express","MongoDB","Twilio","Framer Motion"],
+      sats:[{v:"LIVE",k:"conflict detection"},{v:"WAPP",k:"Twilio alerts"},{v:"IIIT",k:"real deployment"}],
+      challenge:"Handling concurrent room booking conflicts and notifying students where they actually read — WhatsApp, not email.",
+      solution:"Server-side conflict detection on the reservation endpoint, and Twilio's WhatsApp Business API for automated booking confirmations.",
+      impact:"A real booking platform adopted by IIIT Nagpur's music club — students book practice rooms from their phones.",
+      greet:"Her music club platform. It jams AND manages logistics.",
+      live:"https://github.com/ShreyaThakur05/Crescendo_booking", code:"https://github.com/ShreyaThakur05/Crescendo_booking" },
+    { name:"AASA", ty:"SAFETY PLATFORM", sub:"Runner-Up · Real-time safety app with danger-zone heatmaps", hue:22,
+      desc:"A personal safety and peer support platform: crowd-sourced danger-zone heatmaps, anonymous encrypted peer chat over Socket.io, OTP-gated counseling sessions, OAuth authentication, and Google Calendar integration for safety event coordination.",
+      stack:["React.js","Node.js","Express","Socket.io","PostgreSQL","Google Calendar API","OAuth"],
+      sats:[{v:"ANON",k:"encrypted chat"},{v:"LIVE",k:"heatmaps"},{v:"RUNNER-UP",k:"Women in Dev 2024"}],
+      challenge:"Protecting user identity in a crisis context while keeping real-time features fast and trustworthy.",
+      solution:"Encrypted anonymous messaging over Socket.io with OTP-gated counseling, and OAuth only where identity is beneficial.",
+      impact:"Runner-Up at Women in Dev 2024. A complete safety system — heatmaps, peer chat, and calendar coordination, all in one.",
+      greet:"Her hackathon runner-up. It maps danger zones and keeps you safe.",
+      live:"https://github.com/ShreyaThakur05/AASA", code:"https://github.com/ShreyaThakur05/AASA" }
+  ],
+  vault:{ name:"HYBRID STRANGLE", ty:"CLASSIFIED · FINTECH", sub:"Options-trading automation — experimental", hue:0,
+      desc:"An options-trading automation tool implementing a hybrid strangle strategy: basket creator and manager, live broker integration through the Shoonya API, configuration management, trade logging and notifications — packaged as a standalone build.",
+      stack:["Python","Shoonya API","PyInstaller"],
+      sats:[{v:"LIVE",k:"broker API"},{v:"AUTO",k:"baskets"},{v:"𝚫",k:"strategy"}],
+      challenge:"Real money, real markets, zero tolerance for silent failures.",
+      solution:"Defensive automation: configuration management, full trade logging, and notification hooks around every order path.",
+      impact:"A working automated trading system — the experiment she keeps in the vault.",
+      greet:"The VAULT. Even I'm not supposed to know about this one.",
+      live:"", code:"https://github.com/ShreyaThakur05/Hybrid_Strangle" },
+  galaxy:[
+    {name:"Languages",color:"#FFC46B",skills:["Python","JavaScript","Go","Java","SQL","C"]},
+    {name:"AI / ML",color:"#C792EA",skills:["RAG","LangChain","GPT-4o","Gemini","LightGBM","scikit-learn","Pinecone"]},
+    {name:"Frameworks",color:"#6FE7FF",skills:["React","Next.js","React Native","Flask","Express","Socket.io"]},
+    {name:"Data",color:"#8BF0A0",skills:["PostgreSQL","MongoDB","MySQL","Redis","Prisma","SQLite"]},
+    {name:"Tools",color:"#FF6B81",skills:["Docker","Git","Linux","Kafka","Tailwind","Postman"]}
+  ],
+  missions:[
+    {st:"MISSION COMPLETE",when:"MAY — JUN 2025",role:"Amazon ML Summer School",org:"Amazon · Selected Participant",
+     pts:["Selected among the top 5% of 60,000+ applicants nationwide for Amazon's flagship ML program",
+          "Trained by Amazon scientists on supervised learning, deep learning and probabilistic models — model evaluation, generalization, real-world deployment"]},
+    {st:"MISSION COMPLETE",when:"JUN 2025",role:"Software Engineering Intern",org:"Comparely · Remote",
+     pts:["Shipped cross-platform mobile interfaces with React Native + Go backend services supporting 500+ active users, with a 35% reduction in API latency",
+          "Redesigned onboarding UX, improving retention by 30%; modular services with validation & centralized exception handling cut production errors by 25%"]},
+    {st:"MISSION COMPLETE",when:"DEC 2025 — JAN 2026",role:"Lead Organiser & Full-Stack Developer",org:"WomenInDev 2.0 · Tantrafiesta, IIIT Nagpur",
+     pts:["Built the official event platform — React stack + MongoDB with JWT auth, registrations and real-time announcements for 200+ attendees",
+          "Coordinated end-to-end logistics: transport, accommodation, preliminary rounds, judges, and prize distribution"]},
+    {st:"BATTLE WON",when:"2024",role:"Runner-Up · Women in Dev 2024",org:"Tantrafiesta, IIIT Nagpur",
+     pts:["Built AASA — a real-time safety platform with anonymous peer chat, danger-zone heatmaps and OAuth authentication"]},
+    {st:"RANK ACHIEVED",when:"ONGOING",role:"LeetCode Knight · Top 5% Global",org:"leetcode.com/u/shreyathakur0503",
+     pts:["500+ problems solved · max rating 2006","CodeChef 3-star · max rating 1652"]},
+    {st:"TRAINING ACTIVE",when:"2023 — PRESENT",role:"B.Tech, Computer Science & Engineering",org:"IIIT Nagpur · CGPA 8.95",
+     pts:["Simultaneously pursuing B.Sc in Programming & Data Science at IIT Madras (Foundation Certificate earned)"]}
+  ],
+  alienLines:[
+    "Blip! I'm LUMEN. She trained an AI to review code. I review snacks.",
+    "Ten planets out there. She shipped every single one. I supervised.",
+    "Psst — ✦ star fragments are hidden in deep space. Find all five!",
+    "Double-click anywhere and I'll come to you. I'm basically a comet.",
+    "Try the station dish — align the signal and something SECRET unlocks.",
+    "She's a LeetCode Knight. Top 5% globally. I've seen her debug at 2am. Terrifying.",
+    "Amazon picked her from 60,000+ people. I picked her first though.",
+    "Recruiters: the COMMS array sends her a real message. She replies fast!",
+    "↑↑↓↓←→←→BA. You didn't hear it from me.",
+    "Hold your cursor on me. Go on. I dare you."
+  ]
+};
+/* ════════════════ end editable data ════════════════ */
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine=matchMedia('(pointer:fine)').matches;
+const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a),lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const angLerp=(a,b,t)=>{let d=((b-a+Math.PI)%TAU+TAU)%TAU-Math.PI;return a+d*t};
+$('#introName').textContent=DATA.name;$('#hudName').textContent=DATA.name;
+$('#bubbleWho').textContent=DATA.alienName+' · COMPANION';
+
+/* canvas & camera */
+const cv=$('#world'),g=cv.getContext('2d');
+let W=0,H=0,DPR=Math.min(devicePixelRatio||1,2);
+function size(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;g.setTransform(DPR,0,0,DPR,0,0)}
+size();addEventListener('resize',size);
+const cam={x:0,y:0,z:.45,tx:0,ty:0,tz:.45,mode:'astro'}; // mode: astro | shuttle | free | pt
+let camPt={x:0,y:0};
+const w2s=(x,y)=>[(x-cam.x)*cam.z+W/2,(y-cam.y)*cam.z+H/2];
+const s2w=(x,y)=>[(x-W/2)/cam.z+cam.x,(y-H/2)/cam.z+cam.y];
+
+/* world layout */
+const ST={x:0,y:0};
+const PANG=[-0.55,0.05,0.62,1.22,1.86,2.98,3.55,4.12,4.72,5.38,0.33,1.54,2.46,3.24,4.42,5.72];
+const PRAD=[1520,2080,1500,2020,1560,2120,1540,2060,1500,2100,2550,1760,2480,1700,2420,1740];
+const planets=DATA.planets.map((p,i)=>({...p,
+  x:Math.cos(PANG[i%PANG.length])*PRAD[i%PANG.length],
+  y:Math.sin(PANG[i%PANG.length])*PRAD[i%PANG.length]*.78,
+  r:102+(i%4)*13,spin:rnd(0,TAU)}));
+const VAULT={...DATA.vault,x:Math.cos(2.42)*3150,y:Math.sin(2.42)*3150*.78,r:118,spin:0,hue:0,vaultP:true};
+let vaultOpen=false;
+const GAL={x:-1560,y:1140}, RELAY={x:160,y:-1380}, EARTH={x:-4000,y:-340}, HOLE={x:3500,y:2500};
+const gstars=[];
+const GCLUST=[{x:0,y:-320},{x:305,y:-99},{x:188,y:259},{x:-188,y:259},{x:-305,y:-99}];
+DATA.galaxy.forEach((c,ci)=>{
+  const cx=GAL.x+GCLUST[ci].x,cy=GAL.y+GCLUST[ci].y;
+  c.skills.forEach((s,si)=>{const a=si/c.skills.length*TAU+ci*.7,r=60+(si%2)*50;
+    gstars.push({x:cx+Math.cos(a)*r*1.6,y:cy+Math.sin(a)*r,label:s.replace(/[\[\]]/g,''),cat:ci,ph:rnd(0,TAU)})});
+});
+const frags=[{x:640,y:520},{x:-820,y:-1040},{x:2200,y:240},{x:-2400,y:340},{x:700,y:-820}].map(f=>({...f,got:false,ph:rnd(0,TAU)}));
+const debris=Array.from({length:10},()=>({x:rnd(-1900,1900),y:rnd(-1400,1400),vx:rnd(-.08,.08),vy:rnd(-.08,.08),r:rnd(7,16),rot:rnd(0,TAU),vr:rnd(-.01,.01),grab:false,carried:false}));
+const layers=[{f:.15,n:150,s:1},{f:.4,n:95,s:1.5},{f:.75,n:55,s:2.1}].map(L=>({...L,
+  pts:Array.from({length:L.n},()=>({x:Math.random()*2000,y:Math.random()*1400,tw:rnd(0,TAU),sp:rnd(.02,.09)}))}));
+const nebulas=[{x:-700,y:-800,r:760,c:'108,80,200'},{x:1600,y:340,r:860,c:'40,140,180'},{x:-1700,y:1350,r:700,c:'200,80,140'},{x:560,y:-1600,r:640,c:'60,180,140'}];
+
+/* destinations for the NAV computer */
+const DEST=[
+  {key:'station',nm:'STATION INTELLECT-01',ty:'HOME · HER CABIN',pos:()=>({x:ST.x,y:ST.y}),z:.95},
+  ...planets.map((p,i)=>({key:'p'+i,nm:p.name,ty:'PLANET · '+p.ty,pos:()=>p,z:.85})),
+  {key:'galaxy',nm:'SKILL GALAXY',ty:'STAR CLUSTER · SKILLS',pos:()=>GAL,z:.78},
+  {key:'missions',nm:'MISSION RELAY',ty:'BEACON · EXPERIENCE',pos:()=>RELAY,z:.9},
+  {key:'comms',nm:'COMMS ARRAY',ty:'STATION · CONTACT',pos:()=>({x:ST.x,y:ST.y}),z:.95}
+];
+function addVaultDest(){if(DEST.some(d=>d.key==='pv'))return;
+  DEST.splice(DEST.length-2,0,{key:'pv',nm:'◆ THE VAULT',ty:'CLASSIFIED · FINTECH',pos:()=>VAULT,z:.85})}
+const TOTAL_DEST=DEST.length+1; /* incl. vault */
+const visited=new Set();
+
+/* sound */
+let AC=null,ambGain=null,thrGain=null,sndOn=false;
+function audio(){if(AC)return;AC=new (window.AudioContext||webkitAudioContext)();
+  const o1=AC.createOscillator(),o2=AC.createOscillator(),f=AC.createBiquadFilter();
+  ambGain=AC.createGain();ambGain.gain.value=0;
+  o1.frequency.value=54;o2.frequency.value=54.7;o1.type=o2.type='sawtooth';
+  f.type='lowpass';f.frequency.value=120;
+  o1.connect(f);o2.connect(f);f.connect(ambGain);ambGain.connect(AC.destination);o1.start();o2.start();
+  const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=420;
+  thrGain=AC.createGain();thrGain.gain.value=0;
+  src.connect(bp);bp.connect(thrGain);thrGain.connect(AC.destination);src.start()}
+function blip(fq=880,dur=.07,vol=.05){if(!sndOn||!AC)return;
+  const o=AC.createOscillator(),gn=AC.createGain();o.type='sine';o.frequency.value=fq;
+  gn.gain.setValueAtTime(vol,AC.currentTime);gn.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
+  o.connect(gn);gn.connect(AC.destination);o.start();o.stop(AC.currentTime+dur)}
+function sweep(){if(!sndOn||!AC)return;const o=AC.createOscillator(),gn=AC.createGain();
+  o.frequency.setValueAtTime(300,AC.currentTime);o.frequency.exponentialRampToValueAtTime(2400,AC.currentTime+1.1);
+  gn.gain.setValueAtTime(.06,AC.currentTime);gn.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+1.2);
+  o.connect(gn);gn.connect(AC.destination);o.start();o.stop(AC.currentTime+1.2)}
+$('#sndBtn').addEventListener('click',()=>{audio();sndOn=!sndOn;
+  ambGain.gain.linearRampToValueAtTime(sndOn?.05:0,AC.currentTime+.8);
+  $('#sndBtn').textContent='SOUND: '+(sndOn?'ON':'OFF');$('#sndBtn').setAttribute('aria-pressed',sndOn);blip(660)});
+
+/* particles */
+const parts=[],meteors=[],signals=[];
+function burst(x,y,n=18,c='111,231,255',sp=1){for(let i=0;i<n;i++){const a=rnd(0,TAU),v=rnd(.6,2.8)*sp;
+  parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,dec:rnd(.012,.03),r:rnd(1,2.6),c})}}
+function puff(x,y,ang,n=5,c='200,220,240'){for(let i=0;i<n;i++){const a=ang+rnd(-.4,.4),v=rnd(.8,2);
+  parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.8,dec:rnd(.03,.06),r:rnd(1.5,3),c})}}
+
+/* UI helpers */
+let toastT;function toast(h){const t=$('#toast');t.innerHTML=h;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3400)}
+function objective(h){$('#objective').innerHTML='OBJECTIVE — '+h}
+const bubble=$('#bubble');let bubT,bubTarget='alien';
+function say(txt,who,ms=4200){$('#bubbleTxt').textContent=txt;
+  $('#bubbleWho').textContent=(who==='her'?DATA.name+' · ENGINEER':DATA.alienName+' · COMPANION');
+  bubTarget=who==='her'?'astro':'alien';
+  bubble.classList.add('show');clearTimeout(bubT);bubT=setTimeout(()=>bubble.classList.remove('show'),ms)}
+
+/* hologram panel */
+const panel=$('#panel'),pT=$('#panelTitle'),pB=$('#panelBody');
+function openPanel(t,h){pT.textContent=t;pB.innerHTML=h;panel.classList.add('open');pB.scrollTop=0;blip(990)}
+function closePanel(){panel.classList.remove('open')}
+$('#panelClose').addEventListener('click',closePanel);
+const esc=s=>s.replace(/</g,'&lt;');
+const PANELS={
+  station:()=>openPanel('PERSONAL CABIN — '+DATA.name,
+    `<h2>${DATA.name}</h2><div class="sub hudfont">${DATA.role} · ${DATA.avail}</div>
+     <p>${DATA.tagline}</p>
+     <p style="font-size:12.5px;color:var(--hud-dim)">Her cabin. Touch the objects — each one remembers something.</p>
+     <div class="cab">${DATA.cabin.map((o,i)=>`<button data-cab="${i}"><span class="ico">${o.ico}</span><span class="nm hudfont">${o.nm}</span></button>`).join('')}</div>
+     <div class="cab-reveal" id="cabReveal">…</div>`),
+  p:i=>{const p=DATA.planets[i];openPanel('SURFACE SURVEY — '+p.name,
+    `<h2>${p.name}</h2><div class="sub hudfont">${p.sub}</div><p>${p.desc}</p>
+     <div class="kv"><span class="k hudfont">MOONS (STACK)</span><span class="v"><span class="moons">${p.stack.map(s=>`<span class="moon hudfont">${s}</span>`).join('')}</span></span></div>
+     <div class="sats">${p.sats.map(s=>`<div class="sat"><div class="v hudfont">${s.v}</div><div class="k hudfont">${s.k}</div></div>`).join('')}</div>
+     <div class="kv"><span class="k hudfont">ASTEROID BELT (CHALLENGE)</span><span class="v">${p.challenge}</span></div>
+     <div class="kv"><span class="k hudfont">STRUCTURE (SOLUTION)</span><span class="v">${p.solution}</span></div>
+     <div class="kv"><span class="k hudfont">SIGNAL (IMPACT)</span><span class="v">${p.impact}</span></div>
+     <div class="hbtns"><a class="hbtn hudfont" href="${p.live}" target="_blank" rel="noopener">LAUNCH DEMO ▸ LIVE</a>
+     <a class="hbtn ghost hudfont" href="${p.code}" target="_blank" rel="noopener">SOURCE ▸ GITHUB</a></div>`)},
+  galaxy:()=>openPanel('SKILL GALAXY — STAR CHART',
+    `<h2>Star chart</h2><div class="sub hudfont">HOVER THE STARS OUT THERE · OR READ THE CHART</div>
+     ${DATA.galaxy.map(c=>`<div class="kv"><span class="k hudfont" style="color:${c.color}">${c.name}</span><span class="v">${c.skills.join(' · ')}</span></div>`).join('')}`),
+  missions:()=>openPanel('MISSION LOG — EXPEDITIONS',
+    DATA.missions.map(m=>`<div class="mission"><span class="st hudfont">◈ ${m.st}</span><h3>${m.role}</h3>
+      <div class="org hudfont">${m.when} · ${m.org}</div><ul>${m.pts.map(p=>`<li>${p}</li>`).join('')}</ul></div>`).join('')),
+  comms:()=>openPanel('COMMS ARRAY — TRANSMIT TO EARTH',
+    `<p>Record a transmission. It travels through deep space and reaches <b>${DATA.name}</b>'s inbox.</p>
+     <div class="field"><label class="hudfont">YOUR CALLSIGN (NAME)</label><input id="txName" placeholder="Cmdr. Jane Doe"></div>
+     <div class="field"><label class="hudfont">MESSAGE</label><textarea id="txMsg" placeholder="We come in peace. Also, we're hiring."></textarea></div>
+     <button class="transmit hudfont" id="txBtn">▲ TRANSMIT ▲</button>
+     <div class="hbtns" style="margin-top:18px">
+       <a class="hbtn ghost hudfont" href="${DATA.github}" target="_blank" rel="noopener">GITHUB ↗</a>
+       <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">LINKEDIN ↗</a>
+       <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener">RESUME ↓</a></div>
+     <p style="margin-top:14px;font-size:12px;color:var(--hud-dim)">Direct channel: <a href="mailto:${DATA.email}" style="color:var(--hud)">${DATA.email}</a></p>`),
+  dossier:()=>openPanel('MISSION DOSSIER — PLAIN TEXT',
+    `<h2>${DATA.name}</h2><div class="sub hudfont">${DATA.role} · ${DATA.avail}</div><p>${DATA.tagline}</p>
+     <p><b>Projects:</b></p>${DATA.planets.map(p=>`<p><b>${p.name}</b> — ${p.sub}. ${p.desc} Stack: ${p.stack.join(', ')}.</p>`).join('')}
+     <p><b>Skills:</b> ${DATA.galaxy.map(c=>c.name+': '+c.skills.join(', ')).join(' · ')}</p>
+     <p><b>Experience:</b></p>${DATA.missions.map(m=>`<p><b>${m.role}</b> (${m.when}, ${m.org}): ${m.pts.join('; ')}</p>`).join('')}
+     <div class="hbtns"><a class="hbtn hudfont" href="mailto:${DATA.email}">EMAIL</a>
+       <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener">RESUME</a></div>`)
+};
+pB.addEventListener('click',e=>{
+  const c=e.target.closest('[data-cab]');
+  if(c){$('#cabReveal').textContent=DATA.cabin[+c.dataset.cab].txt;blip(740)}
+  if(e.target.id==='txBtn'){const nm=esc(($('#txName').value||'Unknown vessel').trim()),msg=($('#txMsg').value||'').trim();
+    closePanel();sweep();transmit(nm,msg)}
+});
+function transmit(nm,msg){
+  signals.push({x:ST.x,y:ST.y-60,t:0});objective('TRANSMISSION EN ROUTE — <b>TRACKING SIGNAL</b>');
+  cam.mode='free';
+  setTimeout(()=>{toast('◈ <b>SIGNAL RECEIVED ON EARTH</b> — opening your mail client');
+    location.href='mailto:'+DATA.email+'?subject='+encodeURIComponent('Transmission from '+nm)+'&body='+encodeURIComponent(msg)},3400)}
+$('#dossierBtn').addEventListener('click',()=>PANELS.dossier());
+$('#fragChip').addEventListener('click',()=>toast('✦ Fragments hide in deep space — <b>'+frags.filter(f=>f.got).length+'/5</b> found. Drag around and look!'));
+
+/* ═══ NAV COMPUTER ═══ */
+const nav=$('#nav'),destList=$('#destList'),lockBr=$('#lockBr'),engage=$('#engage');
+let lockedKey=null;
+const RSCALE=3600;
+function navOpen(){
+  nav.classList.add('open');blip(700,.1);buildNav();
+}
+function navClose(){nav.classList.remove('open');blip(420,.08)}
+$('#navBtn').addEventListener('click',navOpen);
+$('#navClose').addEventListener('click',navClose);
+nav.addEventListener('click',e=>{if(e.target===nav)navClose()});
+function distOf(d){const p=d.pos();return Math.hypot(p.x-astro.x,p.y-astro.y)}
+function buildNav(){
+  /* radar blips */
+  $$('.blip',$('#radar')).forEach(b=>b.remove());
+  const R=140;
+  DEST.forEach((d,i)=>{
+    if(d.key==='comms')return; // shares station position
+    const p=d.pos();const b=document.createElement('div');
+    b.className='blip'+(d.key.startsWith('p')?' amber':d.key==='galaxy'?' green':'');
+    b.style.left=(50+clamp(p.x/RSCALE,-0.92,0.92)*50)+'%';
+    b.style.top=(50+clamp(p.y/RSCALE,-0.92,0.92)*50)+'%';
+    b.innerHTML=`<span class="nm">${d.nm.split(' ')[0]}</span>`;b.dataset.key=d.key;
+    $('#radar').appendChild(b);
+  });
+  const you=document.createElement('div');you.className='blip you';
+  you.style.left=(50+clamp(astro.x/RSCALE,-0.95,0.95)*50)+'%';
+  you.style.top=(50+clamp(astro.y/RSCALE,-0.95,0.95)*50)+'%';
+  $('#radar').appendChild(you);
+  /* list */
+  destList.innerHTML=DEST.map((d,i)=>{
+    const dist=distOf(d), au=(dist/1000).toFixed(2);
+    return `<button class="dest${lockedKey===d.key?' locked':''}" data-key="${d.key}">
+      <span class="key hudfont">${i+1}</span>
+      <span><span class="nm">${d.nm}</span><br><span class="ty">${d.ty}</span></span>
+      <span class="dist">${au} AU<br><span class="st ${visited.has(d.key)?'':'unv'}">${visited.has(d.key)?'◈ SURVEYED':'○ UNSURVEYED'}</span></span>
+    </button>`}).join('');
+  $$('.dest').forEach(b=>b.addEventListener('click',()=>lockDest(b.dataset.key)));
+  if(lockedKey)lockDest(lockedKey,true);
+}
+function lockDest(key,silent){
+  lockedKey=key;
+  $$('.dest').forEach(b=>b.classList.toggle('locked',b.dataset.key===key));
+  const d=DEST.find(x=>x.key===key),p=d.pos(),dist=distOf(d);
+  $('#tTarget').textContent=d.nm;
+  $('#tDist').textContent=(dist/1000).toFixed(2)+' AU';
+  $('#tEta').textContent=Math.max(4,(dist/520)).toFixed(1)+' s';
+  $('#tVec').textContent=(Math.atan2(p.y-astro.y,p.x-astro.x)*180/Math.PI).toFixed(1)+'°';
+  $('#tFuel').textContent=(98.2-visited.size*1.7).toFixed(1)+'%';
+  const radarKey=key==='comms'?'station':key;
+  const bl=$(`.blip[data-key="${radarKey}"]`);
+  if(bl){lockBr.style.left=bl.style.left;lockBr.style.top=bl.style.top;lockBr.classList.add('on')}
+  engage.classList.add('ready');
+  if(!silent)blip(980,.09);
+}
+engage.addEventListener('click',()=>{if(!lockedKey)return;navClose();launch(lockedKey)});
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){navClose();closePanel()}
+  if(e.key.toLowerCase()==='n'&&!e.metaKey&&!e.ctrlKey&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){
+    nav.classList.contains('open')?navClose():navOpen()}
+  if(nav.classList.contains('open')){
+    const n=+e.key;if(n>=1&&n<=DEST.length)lockDest(DEST[n-1].key);
+    if(e.key==='Enter'&&lockedKey){navClose();launch(lockedKey)}
+  }
+});
+
+/* ═══ cutscene runner ═══ */
+let cut=null;
+function play(steps,done){cut={steps,i:0,t:0,done};const s=steps[0];s.start&&s.start()}
+function cutTick(dt){
+  if(!cut)return;
+  const s=cut.steps[cut.i];cut.t+=dt/60;
+  let fin=false;
+  if(s.until){s.tick&&s.tick(cut.t);fin=s.until()||cut.t>(s.max||14)}
+  else{const p=Math.min(1,cut.t/(s.t||1));s.tick&&s.tick(p);fin=p>=1}
+  if(fin){s.end&&s.end();cut.i++;cut.t=0;
+    if(cut.i>=cut.steps.length){const d=cut.done;cut=null;d&&d()}
+    else{const n=cut.steps[cut.i];n.start&&n.start()}}
+}
+
+/* ═══════════════ ACTORS ═══════════════ */
+const astro={x:90,y:-40,vx:0,vy:0,ang:0,angV:0,anchor:{x:90,y:-40},seek:null,hidden:false,scaleF:1,
+  beh:'look',behT:3,LA:.5,RA:-.4,tLA:.5,tRA:-.4,head:0,tHead:0,item:null,angT:0,
+  blink:0,blinkT:rnd(2,5),sleep:false,onKey:'station',pony:Array.from({length:5},()=>({x:0,y:0})),impT:rnd(3,7)};
+const alien={x:220,y:-140,vx:0,vy:0,off:{x:120,y:-90},offT:4,mood:'calm',moodT:0,hue:175,scale:1,tScale:1,
+  hist:[],blink:0,blinkT:rnd(2,5),carry:null,stealT:rnd(20,40),cmd:null,dance:0};
+const shuttle={x:ST.x+170,y:ST.y+30,vx:0,vy:0,ang:0,dockedAt:'station',occupied:false,flame:0,retro:0,hatch:0};
+const station={air:0,sunAng:0,panelA:0,droneS:-120,droneDir:1,weld:0,cargoT:30,cargo:null,
+  mods:{research:0,dock:0,comm:0},born:{},labs:[]};
+function growLab(i){const hue=planets[i].hue;
+  if(station.labs.includes(hue))return;station.labs.push(hue);
+  burst(ST.x,ST.y+40,22,'139,240,160',1.1);blip(520,.2,.06);
+  toast('◈ STATION UPGRADED — <b>+LABORATORY '+station.labs.length+'</b> attached')}
+function grow(key){if(station.mods[key])return;station.mods[key]=1;station.born[key]=0;
+  burst(ST.x,ST.y,26,'139,240,160',1.2);blip(520,.2,.06);
+  const names={research:'RESEARCH WING',dock:'DOCKING BAY',comm:'COMM ARRAY'};
+  toast('◈ STATION UPGRADED — <b>+'+names[key]+'</b> attached')}
+
+const BEH_POOL=['look','wrist','tablet','stars','point','flip','stretch','pet'];
+function setBeh(b){astro.beh=b;astro.behT=rnd(4.5,8);astro.item=null;astro.angT=0;
+  switch(b){
+    case 'look':astro.tLA=.5;astro.tRA=-.4;astro.tHead=rnd(-.3,.3);break;
+    case 'wrist':astro.tLA=-1.5;astro.tRA=-.3;astro.tHead=-.25;astro.item='wrist';break;
+    case 'tablet':astro.tLA=-1.1;astro.tRA=-2.0;astro.tHead=-.3;astro.item='tablet';break;
+    case 'stars':astro.tLA=.6;astro.tRA=.6;astro.tHead=-.6;astro.angT=-.15;break;
+    case 'point':{astro.tRA=-1.6;astro.tLA=.5;astro.tHead=-.1;break}
+    case 'flip':astro.angT=TAU;break;
+    case 'stretch':astro.tLA=-2.6;astro.tRA=-2.6;astro.tHead=-.2;break;
+    case 'pet':astro.tRA=-1.2;astro.tLA=.4;alien.mood='happy';alien.moodT=3;break;
+    case 'wave':astro.tRA=-2.2;astro.tLA=.5;astro.tHead=0;astro.behT=1.8;break;
+    case 'thumbs':astro.tRA=-1.8;astro.tLA=.4;astro.behT=1.8;break;
+  }}
+function updAstro(dt){
+  if(astro.hidden)return;
+  const sec=dt/60;
+  /* physics */
+  if(astro.seek){
+    const dx=astro.seek.x-astro.x,dy=astro.seek.y-astro.y,d=Math.hypot(dx,dy)||1;
+    astro.vx+=dx/d*.09*dt;astro.vy+=dy/d*.09*dt;
+    astro.vx*=.93;astro.vy*=.93;
+    if(Math.random()<.4)puff(astro.x-Math.cos(astro.ang)*12,astro.y+18,Math.atan2(-dy,-dx),1,'160,200,255');
+    astro.angT=Math.atan2(dy,dx)*.25;
+  }else{
+    astro.vx+=(astro.anchor.x-astro.x)*.0006*dt;
+    astro.vy+=(astro.anchor.y-astro.y)*.0006*dt;
+    astro.vx*=.995;astro.vy*=.995;
+    astro.impT-=sec;
+    if(astro.impT<=0){astro.impT=rnd(4,9);astro.vx+=rnd(-.25,.25);astro.vy+=rnd(-.2,.2)}
+    const sp=Math.hypot(astro.vx,astro.vy);
+    if(sp>.7){ /* RCS correction burst */
+      const a=Math.atan2(astro.vy,astro.vx);
+      puff(astro.x+Math.cos(a)*16,astro.y+Math.sin(a)*16,a,4,'180,220,255');
+      astro.vx*=.4;astro.vy*=.4;blip(1200,.04,.02)}
+  }
+  astro.x+=astro.vx*dt;astro.y+=astro.vy*dt;
+  /* behavior */
+  if(!astro.sleep&&!cut){astro.behT-=sec;if(astro.behT<=0)setBeh(BEH_POOL[(Math.random()*BEH_POOL.length)|0])}
+  if(astro.beh==='pet'){const dx=alien.x-astro.x;astro.tRA=-1.2-(alien.y-astro.y)*.002;if(Math.abs(dx)>90)alien.off={x:70,y:-40}}
+  if(astro.beh==='point'){const p=planets[(performance.now()/9000|0)%3];astro.tRA=-(Math.atan2(astro.y-p.y,p.x-astro.x))*.6-1.2}
+  /* pose springs */
+  astro.LA=lerp(astro.LA,astro.tLA,.04*dt);astro.RA=lerp(astro.RA,astro.tRA,.04*dt);
+  astro.head=lerp(astro.head,astro.tHead,.05*dt);
+  if(astro.beh==='flip')astro.ang+= .02*dt; else astro.ang=angLerp(astro.ang,Math.sin(performance.now()*.0003)*.1+astro.angT,.02*dt);
+  /* blink */
+  astro.blinkT-=sec;if(astro.blinkT<=0){astro.blink=.14;astro.blinkT=rnd(2.4,5.5)}
+  if(astro.blink>0)astro.blink-=sec;
+  /* ponytail chain (local space) */
+  const root={x:-12,y:-34};
+  const ca=Math.cos(-astro.ang),sa=Math.sin(-astro.ang);
+  const lvx=(astro.vx*ca-astro.vy*sa),lvy=(astro.vx*sa+astro.vy*ca);
+  let prev=root;
+  astro.pony.forEach((p,i)=>{
+    const tx=prev.x-7-lvx*8,ty=prev.y+3+Math.sin(performance.now()*.002+i)*1.6-lvy*8;
+    p.x=lerp(p.x,tx,.18*dt);p.y=lerp(p.y,ty,.18*dt);prev=p});
+}
+function updAlien(dt){
+  const sec=dt/60;
+  alien.offT-=sec;
+  if(alien.offT<=0&&!alien.cmd){alien.offT=rnd(3,6);alien.off={x:rnd(-150,150),y:rnd(-130,60)}}
+  alien.stealT-=sec;
+  if(alien.stealT<=0&&!alien.cmd&&alien.mood==='calm'){
+    alien.stealT=rnd(30,55);
+    const d=debris.filter(d=>Math.hypot(d.x-alien.x,d.y-alien.y)<500)[0];
+    if(d){alien.carry=d;d.carried=true;alien.mood='excited';alien.moodT=4;
+      say("Ooh. A rock. It's mine now. For science.");
+      setTimeout(()=>{if(alien.carry){alien.carry.carried=false;alien.carry.vx=rnd(-.5,.5);alien.carry.vy=rnd(-.5,.5);alien.carry=null;alien.mood='calm'}},4000)}}
+  if(alien.moodT>0){alien.moodT-=sec;if(alien.moodT<=0&&alien.mood!=='greet')alien.mood='calm'}
+  fetchTick(sec);
+  const tgt=alien.cmd?alien.cmd:(meteorScare>0?{x:astro.x-40,y:astro.y+30}:{x:astro.x+alien.off.x,y:astro.y+alien.off.y});
+  alien.vx+=(tgt.x-alien.x)*.004*dt;alien.vy+=(tgt.y-alien.y)*.004*dt;
+  alien.vx*=.93;alien.vy*=.93;alien.x+=alien.vx*dt;alien.y+=alien.vy*dt;
+  alien.hist.unshift({x:alien.x,y:alien.y});alien.hist.length=Math.min(alien.hist.length,16);
+  alien.tScale=meteorScare>0?.65:(alien.mood==='excited'||alien.mood==='greet'?1.15:1);
+  alien.scale=lerp(alien.scale,alien.tScale,.08*dt);
+  if(alien.mood==='dance')alien.dance+=.2*dt;
+  const HUES={calm:175,happy:140,excited:46,greet:46,scared:275,dance:(performance.now()*.1)%360,sleep:210,pet:330,fetch:46};
+  alien.hue=lerp(alien.hue,meteorScare>0?275:(HUES[alien.mood]??175),.06*dt);
+  alien.blinkT-=sec;if(alien.blinkT<=0){alien.blink=.12;alien.blinkT=rnd(2,5)}
+  if(alien.blink>0)alien.blink-=sec;
+  if(alien.carry){alien.carry.x=alien.x+14;alien.carry.y=alien.y+22}
+}
+
+/* ═══════════════ LAUNCH SEQUENCE ═══════════════ */
+let busy=false;
+function pointsFor(key){
+  if(key==='station'||key==='comms')return{SP:{x:ST.x+170,y:ST.y+30},LP:{x:ST.x+40,y:ST.y+96},AP:{x:ST.x+170,y:ST.y+330}};
+  if(key.startsWith('p')){const p=key==='pv'?VAULT:planets[+key.slice(1)];
+    return{SP:{x:p.x+86,y:p.y-p.r-44},LP:{x:p.x-10,y:p.y-p.r-30},AP:{x:p.x+86,y:p.y-p.r-330}}}
+  if(key==='galaxy')return{SP:{x:GAL.x+120,y:GAL.y+270},LP:{x:GAL.x,y:GAL.y+240},AP:{x:GAL.x+120,y:GAL.y+560}};
+  return{SP:{x:RELAY.x+110,y:RELAY.y+90},LP:{x:RELAY.x-20,y:RELAY.y+70},AP:{x:RELAY.x+110,y:RELAY.y+380}};
+}
+function greetLine(key){
+  if(key==='station')return "Home! Welcome to her station. The cabin is full of memories.";
+  if(key==='comms')return "The COMMS array! Earth is *that* way. Say something nice — she actually replies!";
+  if(key==='galaxy')return "The Skill Galaxy! Every star is something she's mastered.";
+  if(key==='missions')return "The Mission Relay. Amazon, internships, hackathon wins — all logged here.";
+  if(key==='pv')return DATA.vault.greet;
+  const p=planets[+key.slice(1)];return "✦ Welcome to "+p.name+"! "+(p.greet||"She built this whole world.");
+}
+function launch(key){
+  if(busy)return;busy=true;closePanel();cine(1);
+  const {SP,LP,AP}=pointsFor(key);
+  objective('AUTOPILOT ENGAGED — <b>'+DEST.find(d=>d.key===key).nm+'</b>');
+  const hatch=()=>({x:shuttle.x,y:shuttle.y-6});
+  play([
+    {start(){astro.seek=hatch();setBeh('look');cam.mode='astro'},
+     tick(){astro.seek=hatch();shuttle.hatch=Math.min(1,shuttle.hatch+.04)},
+     until:()=>Math.hypot(astro.x-shuttle.x,astro.y-shuttle.y)<34,max:10},
+    {t:.7,start(){blip(640,.1)},tick(p){astro.scaleF=1-p},
+     end(){astro.hidden=true;astro.seek=null;shuttle.occupied=true;shuttle.hatch=0}},
+    {t:1.1,start(){shuttle.dockedAt=null;cam.mode='shuttle';blip(220,.3,.06);
+       puff(shuttle.x,shuttle.y-16,-Math.PI/2,6)},
+     tick(){shuttle.vy+=.04;shuttle.vx+=.015;shuttle.x+=shuttle.vx*_dt;shuttle.y+=shuttle.vy*_dt}},
+    {start(){if(thrGain)thrGain.gain.value=sndOn?.05:0;
+       this.z0=cam.tz;cam.tz=Math.max(.5,cam.tz*.8);dodgeStart()},
+     tick(){const dx=AP.x-shuttle.x,dy=AP.y-shuttle.y,d=Math.hypot(dx,dy)||1;
+       shuttle.vx+=dx/d*.22;shuttle.vy+=dy/d*.22;
+       const sp=Math.hypot(shuttle.vx,shuttle.vy),mx=9;
+       if(sp>mx){shuttle.vx*=mx/sp;shuttle.vy*=mx/sp}
+       shuttle.x+=shuttle.vx;shuttle.y+=shuttle.vy;
+       shuttle.ang=angLerp(shuttle.ang,Math.atan2(shuttle.vy,shuttle.vx),.1);
+       shuttle.flame=1;
+       warp=Math.min(1,sp/8);burnDir.x=shuttle.vx/(sp||1);burnDir.y=shuttle.vy/(sp||1);
+       dodgeTick(d);
+       parts.push({x:shuttle.x-Math.cos(shuttle.ang)*30,y:shuttle.y-Math.sin(shuttle.ang)*30,
+         vx:rnd(-.3,.3),vy:rnd(-.3,.3),life:.7,dec:.05,r:rnd(1.5,3),c:'255,180,90'});
+       alien.cmd={x:shuttle.x-60,y:shuttle.y-50};},
+     until:()=>Math.hypot(AP.x-shuttle.x,AP.y-shuttle.y)<90,max:16},
+    {t:1.3,start(){shuttle.flame=0;shuttle.retro=1;if(thrGain)thrGain.gain.value=0;
+       warp=0;dodgeEnd();if(key.startsWith('p'))entryFx=1;
+       cam.tz=DEST.find(d=>d.key===key)?.z||.85;
+       this.sx=shuttle.x;this.sy=shuttle.y;this.sa=shuttle.ang},
+     tick(p){const e=1-Math.pow(1-p,3);
+       shuttle.x=lerp(this.sx,SP.x,e);shuttle.y=lerp(this.sy,SP.y,e);
+       shuttle.ang=angLerp(this.sa,0,e);shuttle.vx=shuttle.vy=0;
+       if(Math.random()<.5)puff(shuttle.x+34,shuttle.y,0,2,'200,220,240')},
+     end(){shuttle.retro=0}},
+    {t:.5,start(){shuttle.dockedAt=key;burst(shuttle.x,shuttle.y+12,12,'180,200,220',.7);blip(160,.25,.07);shakeV=1;try{navigator.vibrate&&navigator.vibrate(35)}catch(e){}}},
+    {t:1.6,start(){alien.cmd={x:LP.x-44,y:LP.y-40};alien.mood='greet';alien.moodT=3;
+       say(greetLine(key));blip(1100,.12)}},
+    {t:.6,start(){astro.x=shuttle.x;astro.y=shuttle.y-8;astro.hidden=false;shuttle.occupied=false;shuttle.hatch=1},
+     tick(p){astro.scaleF=p},end(){shuttle.hatch=0}},
+    {start(){astro.seek={x:LP.x,y:LP.y}},
+     until:()=>Math.hypot(astro.x-LP.x,astro.y-LP.y)<22,max:8,
+     end(){astro.seek=null;astro.anchor={...LP};astro.onKey=key}}
+  ],()=>{
+    busy=false;visited.add(key);
+    cam.mode='astro';cam.tz=DEST.find(d=>d.key===key).z;
+    alien.cmd=null;alien.mood='happy';alien.moodT=4;
+    if(key==='station'){PANELS.station();objective('CABIN — <b>TOUCH HER OBJECTS</b>')}
+    if(key==='comms'){PANELS.comms();grow('comm');objective('COMMS — <b>TRANSMIT TO SHREYA</b>')}
+    if(key==='pv'){PANELS.vault();setBeh('thumbs');objective('VAULT OPENED — <b>CLASSIFIED PROJECT</b>');ach('vault')}
+    else if(key.startsWith('p')){const pi=+key.slice(1);PANELS.p(pi);growLab(pi);setBeh('thumbs');
+      objective('SURVEY COMPLETE — <b>READ THE HOLOGRAM</b>');ach('pilot');
+      if(planets.every((_,i)=>visited.has('p'+i)))ach('surveyor')}
+    if(key==='galaxy'){PANELS.galaxy();grow('research');objective('GALAXY — <b>HOVER THE STARS</b>')}
+    if(key==='missions'){PANELS.missions();grow('dock');objective('MISSION LOG DECRYPTED')}
+    updateRank();saveState();cine(0);
+  });
+}
+
+/* ═══════════════ INPUT ═══════════════ */
+let mx=0,my=0,wmx=0,wmy=0,down=null,panning=false,grabbed=null,hover=null,lastAct=performance.now(),meteorScare=0;
+const tool=$('#tool'),toolLbl=$('.lbl',tool);
+if(fine&&!reduced)document.documentElement.classList.add('cursor-on');
+let inUI=false,domLbl=null;
+addEventListener('mouseover',e=>{
+  inUI=!!e.target.closest('#nav,#panel,.hud-top,.navdock,#intro,#toast');
+  const f=e.target.closest('input,textarea');
+  const t=e.target.closest('a,button,.dest,.hud-chip,.cbtn,[data-cab]');
+  domLbl=f?'TYPE':(t?'CLICK':null);
+});
+addEventListener('pointermove',e=>{
+  mx=e.clientX;my=e.clientY;[wmx,wmy]=s2w(mx,my);
+  if(fine)tool.style.transform=`translate(${mx}px,${my}px)`;
+  if(grabbed){grabbed.px=grabbed.x;grabbed.py=grabbed.y;grabbed.x=wmx;grabbed.y=wmy;return}
+  if(down&&Math.hypot(mx-down.sx,my-down.sy)>7){panning=true;cam.mode='free';
+    cam.tx=cam.x=down.cx-(mx-down.sx)/cam.z;cam.ty=cam.y=down.cy-(my-down.sy)/cam.z;
+    document.documentElement.classList.add('grabbing')}
+},{passive:true});
+cv.addEventListener('pointerdown',e=>{
+  lastAct=performance.now();wakeUp();
+  [wmx,wmy]=s2w(e.clientX,e.clientY);
+  const d=debris.find(d=>!d.carried&&Math.hypot(d.x-wmx,d.y-wmy)<d.r+14/cam.z);
+  if(d){grabbed=d;d.grab=true;blip(300,.08);return}
+  down={sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};panning=false;
+});
+addEventListener('pointerup',()=>{
+  document.documentElement.classList.remove('grabbing');
+  if(grabbed){grabbed.vx=(grabbed.x-(grabbed.px??grabbed.x))*.4;grabbed.vy=(grabbed.y-(grabbed.py??grabbed.y))*.4;
+    grabbed.grab=false;maybeFetch(grabbed);grabbed=null;blip(220,.1);return}
+  if(down&&!panning)worldClick();
+  down=null;panning=false;
+});
+cv.addEventListener('wheel',e=>{e.preventDefault();
+  cam.tz=clamp(cam.tz*(e.deltaY>0?.9:1.11),.28,1.8);if(cam.mode==='free')cam.mode='free'},{passive:false});
+function worldClick(){
+  const f=frags.find(f=>!f.got&&Math.hypot(f.x-wmx,f.y-wmy)<26/cam.z+14);
+  if(f){f.got=true;const n=frags.filter(x=>x.got).length;$('#fragCount').textContent=n;
+    burst(f.x,f.y,30,'255,196,107',1.4);blip(1320,.15,.07);
+    alien.mood='excited';alien.moodT=3;
+    toast('✦ STAR FRAGMENT RECOVERED — <b>'+n+'/5</b>');
+    if(n===5){toast('✦✦✦ <b>ALL FRAGMENTS</b> — GOLD VISOR UNLOCKED ✦✦✦');astro.gold=true;setBeh('thumbs');
+      burst(astro.x,astro.y,60,'255,220,120',1.6);ach('collector')}
+    saveState();
+    return}
+  if(Math.hypot(wmx-alien.x,wmy-alien.y)<48){alien.mood='dance';alien.moodT=3;ach('contact');
+    say(DATA.alienLines[(Math.random()*DATA.alienLines.length)|0]);blip(1100,.1);return}
+  if(Math.hypot(wmx-astro.x,wmy-astro.y)<64&&!astro.hidden){setBeh('wave');ach('hello');
+    say(DATA.heroLine,'her');blip(840);burst(astro.x,astro.y-20,10,'111,231,255',.7);return}
+  if(vaultOpen&&Math.hypot(VAULT.x-wmx,VAULT.y-wmy)<VAULT.r+34){
+    if(astro.onKey==='pv'){PANELS.vault();blip(990);return}
+    navOpen();lockDest('pv');return}
+  const pi=planets.findIndex(p=>Math.hypot(p.x-wmx,p.y-wmy)<p.r+34);
+  if(pi>-1){
+    if(astro.onKey==='p'+pi){PANELS.p(pi);blip(990);return}
+    navOpen();lockDest('p'+pi);return}
+  if(Math.hypot(wmx-(ST.x-30),wmy-(ST.y-62))<34){openDishPuzzle();return}
+  const ghHit=ghAt(wmx,wmy);
+  if(ghHit){window.open(ghHit.gh.url,'_blank');blip(900,.08);return}
+  if(Math.hypot(wmx-GAL.x,wmy-GAL.y)<330){navOpen();lockDest('galaxy');return}
+  if(Math.hypot(wmx-RELAY.x,wmy-RELAY.y)<150){navOpen();lockDest('missions');return}
+  if(Math.hypot(wmx-ST.x,wmy-ST.y)<210){navOpen();lockDest('station');return}
+  if(Math.hypot(wmx-HOLE.x,wmy-HOLE.y)<170){toast('◈ <b>SINGULARITY HX-0</b> hums: "ship early, ship often."');burst(wmx,wmy,24,'160,120,255');return}
+  burst(wmx,wmy,8,'111,231,255',.7);blip(500,.05,.03);
+}
+function wakeUp(){if(astro.sleep){astro.sleep=false;say('*yawns* …oh! Visitors! Welcome aboard.','her');setBeh('stretch')}}
+setInterval(()=>{if(performance.now()-lastAct>50000&&!cut&&!astro.sleep){astro.sleep=true;alien.mood='sleep';alien.moodT=999}},5000);
+setInterval(()=>{if(Math.random()<.5&&!bubble.classList.contains('show')&&!astro.sleep)
+  say(DATA.alienLines[(Math.random()*DATA.alienLines.length)|0])},28000);
+setInterval(()=>{if(!reduced){for(let i=0;i<6;i++)setTimeout(()=>meteors.push({x:rnd(0,W*.7),y:-20,vx:rnd(3,6),vy:rnd(2,4),life:1}),i*240);
+  meteorScare=6;say('Meteors! I am NOT scared. I am tactically hiding.')}},58000);
+setInterval(()=>{if(meteorScare>0)meteorScare-=1},1000);
+const seq=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];let ki=0;
+addEventListener('keydown',e=>{ki=(e.key===seq[ki])?ki+1:(e.key===seq[0]?1:0);
+  if(ki===seq.length){ki=0;alien.mood='dance';alien.moodT=5;ach('warp');
+    toast('◈ <b>WARP DRIVE ENGAGED</b> — comet storm inbound');
+    for(let i=0;i<12;i++)setTimeout(()=>meteors.push({x:rnd(0,W),y:-20,vx:rnd(2,7),vy:rnd(2,5),life:1}),i*150)}});
+
+/* intro */
+const intro=$('#intro');
+function begin(){if(intro.classList.contains('gone'))return;
+  intro.classList.add('gone');sessionStorage.setItem('boarded2','1');
+  cam.tz=.85;objective('BOARD COMPLETE — <b>OPEN NAV COMPUTER [N]</b>');
+  setTimeout(()=>toast('◈ Your cursor is a <b>SCANNER</b> — when a label appears next to the ring, you can click that thing'),900);
+  setTimeout(()=>say("Blip! I'm "+DATA.alienName+". She's right there — click her, she loves visitors."),3200)}
+if(reduced||sessionStorage.getItem('boarded2')){intro.classList.add('gone');cam.z=cam.tz=.85}
+else{$$('#intro .ln').forEach((l,i)=>setTimeout(()=>{l.classList.add('on');blip(440+i*60,.06,.03)},500+i*620));
+  setTimeout(()=>$('#enterBtn').classList.add('on'),500+5*620);
+  $('#enterBtn').addEventListener('click',begin);
+  intro.addEventListener('click',e=>{if(e.target.id!=='enterBtn')begin()})}
+
+/* ═══════════════ DRAWING ═══════════════ */
+function off(x,y,m){return x<-m||x>W+m||y<-m||y>H+m}
+function rrect(x,y,w,h,r){g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)}
+function star4(x,y,r){g.beginPath();g.moveTo(x,y-r);g.quadraticCurveTo(x,y,x+r,y);g.quadraticCurveTo(x,y,x,y+r);g.quadraticCurveTo(x,y,x-r,y);g.quadraticCurveTo(x,y,x,y-r);g.closePath()}
+let T=0,_dt=1;
+
+function drawPlanet(p,i){
+  p.spin+=.0012*_dt;const[px,py]=w2s(p.x,p.y);const r=p.r*cam.z;if(off(px,py,r+130))return;
+  const at=g.createRadialGradient(px,py,r*.7,px,py,r*1.45);
+  at.addColorStop(0,`hsla(${p.hue},80%,60%,.16)`);at.addColorStop(1,'transparent');
+  g.fillStyle=at;g.beginPath();g.arc(px,py,r*1.45,0,TAU);g.fill();
+  const bd=g.createRadialGradient(px-r*.4,py-r*.4,r*.1,px,py,r);
+  bd.addColorStop(0,`hsl(${p.hue},65%,62%)`);bd.addColorStop(.7,`hsl(${p.hue},60%,38%)`);bd.addColorStop(1,`hsl(${p.hue},65%,15%)`);
+  g.fillStyle=bd;g.beginPath();g.arc(px,py,r,0,TAU);g.fill();
+  g.save();g.beginPath();g.arc(px,py,r,0,TAU);g.clip();
+  g.globalAlpha=.18;g.strokeStyle='#fff';g.lineWidth=2*cam.z;
+  for(let b=-2;b<=2;b++){g.beginPath();g.ellipse(px,py+b*r*.3,r,r*.16,Math.sin(p.spin+b)*.1,0,TAU);g.stroke()}
+  g.restore();g.globalAlpha=1;
+  /* day/night terminator + city lights once surveyed */
+  g.save();g.beginPath();g.arc(px,py,r,0,TAU);g.clip();
+  const term=p.spin*.55;
+  g.save();g.translate(px,py);g.rotate(term);
+  const ng=g.createLinearGradient(-r,0,r*.25,0);
+  ng.addColorStop(0,'rgba(2,4,12,.62)');ng.addColorStop(1,'rgba(2,4,12,0)');
+  g.fillStyle=ng;g.fillRect(-r,-r,r*2,r*2);
+  if(visited.has(p.vaultP?'pv':'p'+i)){g.fillStyle='rgba(255,205,120,.9)';
+    for(let k=0;k<16;k++){const aa=((i*53+k*97)%360)/360*TAU,rr=Math.sqrt(((i*29+k*61)%100)/100)*r*.85;
+      const cxp=Math.cos(aa)*rr,cyp=Math.sin(aa)*rr*.92;
+      if(cxp<-r*.18){g.globalAlpha=.5+Math.abs(Math.sin(T*2+k))*.5;
+        g.fillRect(cxp,cyp,Math.max(1.1,1.6*cam.z),Math.max(1.1,1.6*cam.z))}}
+    g.globalAlpha=1}
+  g.restore();g.restore();
+  if(i%2===0){g.strokeStyle=`hsla(${p.hue},70%,70%,.4)`;g.lineWidth=3*cam.z;
+    g.beginPath();g.ellipse(px,py,r*1.6,r*.4,-.4,0,TAU);g.stroke()}
+  p.stack.forEach((s,si)=>{const a=p.spin*2+si/p.stack.length*TAU;
+    const mxp=px+Math.cos(a)*r*1.9,myp=py+Math.sin(a)*r*.75;
+    g.fillStyle='#CFE7FF';g.beginPath();g.arc(mxp,myp,3.4*cam.z,0,TAU);g.fill();
+    if(cam.z>.6&&hover==='p'+i){g.font=`${10*cam.z|0}px 'Chakra Petch'`;g.fillStyle='rgba(207,231,255,.85)';
+      g.fillText(s.replace(/[\[\]]/g,''),mxp+6,myp+3)}});
+  /* landing pad */
+  if(visited.has(p.vaultP?'pv':'p'+i)||shuttle.dockedAt===(p.vaultP?'pv':'p'+i)){g.strokeStyle='rgba(111,231,255,.5)';g.lineWidth=1.5;
+    const lx=px-10*cam.z,ly=py-(p.r+22)*cam.z;
+    g.beginPath();g.moveTo(lx-26*cam.z,ly+12*cam.z);g.lineTo(lx+26*cam.z,ly+12*cam.z);g.stroke()}
+  g.font=`600 ${Math.max(10,13*cam.z)|0}px 'Chakra Petch'`;g.textAlign='center';
+  g.fillStyle=hover==='p'+i?'#FFC46B':'rgba(111,231,255,.85)';
+  g.fillText(p.name.replace(/[\[\]]/g,''),px,py+r+26*cam.z);
+  g.font=`${Math.max(8,9.5*cam.z)|0}px 'Chakra Petch'`;g.fillStyle='rgba(111,231,255,.45)';
+  g.fillText((p.vaultP?astro.onKey==='pv':astro.onKey==='p'+i)?'CLICK TO REOPEN':'CLICK TO TARGET',px,py+r+42*cam.z);g.textAlign='left';
+  if(hover==='p'+i){g.strokeStyle='rgba(255,196,107,.6)';g.setLineDash([6,6]);g.lineDashOffset=-T*30;
+    g.beginPath();g.arc(px,py,r+14*cam.z,0,TAU);g.stroke();g.setLineDash([])}
+}
+function modScale(k){if(!station.mods[k])return 0;station.born[k]=Math.min(1,(station.born[k]??1)+.02*_dt);
+  const b=station.born[k];return b<1?1-Math.pow(1-b,3):1}
+function drawStation(){
+  const[px,py]=w2s(ST.x,ST.y);if(off(px,py,420))return;const s=cam.z;
+  station.sunAng+=.0004*_dt;station.panelA=angLerp(station.panelA,Math.sin(station.sunAng)*.5,.01*_dt);
+  g.save();g.translate(px,py);g.rotate(Math.sin(T*.1)*.02);g.scale(s,s);
+  /* habitat ring (behind) */
+  g.strokeStyle='rgba(111,231,255,.3)';g.lineWidth=7;
+  g.beginPath();g.ellipse(0,0,118,42,0,0,TAU);g.stroke();
+  g.lineWidth=1.5;
+  for(let i=0;i<8;i++){const a=T*.25+i/8*TAU;
+    g.strokeStyle='rgba(111,231,255,.2)';
+    g.beginPath();g.moveTo(0,0);g.lineTo(Math.cos(a)*118,Math.sin(a)*42);g.stroke();
+    g.fillStyle=Math.sin(T*2+i)>0?'#FFE9A8':'#33506B';
+    g.beginPath();g.arc(Math.cos(a)*118,Math.sin(a)*42,2.6,0,TAU);g.fill()}
+  /* truss */
+  g.fillStyle='#16293D';g.strokeStyle='rgba(111,231,255,.5)';g.lineWidth=1.5;
+  rrect(-190,-8,380,16,4);g.fill();g.stroke();
+  /* solar wings (sun tracking) */
+  [-1,1].forEach(side=>{g.save();g.translate(side*228,0);g.rotate(station.panelA*side);
+    g.fillStyle='rgba(50,110,200,.55)';rrect(-44,-26,88,52,3);g.fill();g.stroke();
+    g.strokeStyle='rgba(140,190,255,.35)';
+    for(let i=-33;i<=33;i+=11){g.beginPath();g.moveTo(i,-26);g.lineTo(i,26);g.stroke()}
+    g.restore()});
+  /* hub */
+  g.fillStyle='#1B3147';g.strokeStyle='rgba(111,231,255,.6)';
+  rrect(-58,-30,116,60,12);g.fill();g.stroke();
+  for(let i=0;i<3;i++){g.fillStyle=Math.sin(T*1.6+i*2)>0?'#FFE9A8':'#33506B';
+    g.beginPath();g.arc(-26+i*26,-6,5,0,TAU);g.fill()}
+  /* her at the window when asleep */
+  if(astro.sleep){g.fillStyle=DATA.skin;g.beginPath();g.arc(0,-6,4,0,TAU);g.fill();
+    g.font="600 9px 'Chakra Petch'";g.fillStyle='rgba(207,231,255,.6)';g.fillText('z z …',14,-14)}
+  /* dish */
+  g.save();g.translate(-30,-30);g.rotate(Math.sin(T*.4)*.5-.4);
+  g.strokeStyle='rgba(111,231,255,.7)';g.beginPath();g.moveTo(0,0);g.lineTo(0,-24);g.stroke();
+  g.beginPath();g.arc(0,-32,11,.3,Math.PI-.3,true);g.stroke();
+  g.fillStyle='#FF6B81';g.beginPath();g.arc(0,-32,2.4+Math.sin(T*4),0,TAU);g.fill();g.restore();
+  /* nav lights */
+  g.fillStyle=Math.sin(T*3)>0?'#FF6B81':'transparent';g.beginPath();g.arc(-190,0,3,0,TAU);g.fill();
+  g.fillStyle=Math.cos(T*3)>0?'#8BF0A0':'transparent';g.beginPath();g.arc(190,0,3,0,TAU);g.fill();
+  /* airlock */
+  g.fillStyle='#10202F';g.strokeStyle='rgba(111,231,255,.5)';rrect(-16,30,32,26,6);g.fill();g.stroke();
+  g.fillStyle='rgba(111,231,255,.25)';rrect(-12,34+18*(1-station.air),24,18*station.air,3);g.fill();
+  /* maintenance drone */
+  station.droneS+=station.droneDir*.4*_dt;
+  if(Math.abs(station.droneS)>168){station.droneDir*=-1;station.weld=rnd(1,2)}
+  if(station.weld>0){station.weld-=.016*_dt;
+    if(Math.random()<.3)burst(ST.x+station.droneS,ST.y-18,2,'255,220,140',.5)}
+  g.fillStyle='#9FB3C8';rrect(station.droneS-5,-22,10,8,2);g.fill();
+  g.fillStyle='#6FE7FF';g.beginPath();g.arc(station.droneS,-18,1.8,0,TAU);g.fill();
+  /* grown modules */
+  const m=modScale('research');if(m){g.save();g.globalAlpha=m;g.translate(-120,-60*m);
+    g.fillStyle='#1B3147';g.strokeStyle='rgba(139,240,160,.6)';rrect(-30,-16,60,32,8);g.fill();g.stroke();
+    g.font="7px 'Chakra Petch'";g.fillStyle='rgba(139,240,160,.8)';g.fillText('RESEARCH',-19,2);g.restore()}
+  const d2=modScale('dock');if(d2){g.save();g.globalAlpha=d2;g.translate(140,46*d2);
+    g.fillStyle='#1B3147';g.strokeStyle='rgba(255,196,107,.6)';rrect(-34,-12,68,24,6);g.fill();g.stroke();
+    g.font="7px 'Chakra Petch'";g.fillStyle='rgba(255,196,107,.8)';g.fillText('DOCK BAY',-18,2);g.restore()}
+  const cm=modScale('comm');if(cm){g.save();g.globalAlpha=cm;g.translate(64,-44*cm);
+    g.strokeStyle='rgba(111,231,255,.7)';g.beginPath();g.moveTo(0,14);g.lineTo(0,-12);g.stroke();
+    for(let i=0;i<3;i++){g.beginPath();g.arc(0,-12,5+i*5,-2.2,-0.9);g.stroke()}g.restore()}
+  station.labs.slice(0,7).forEach((hue,i)=>{
+    g.save();g.translate(-108+i*36,52);
+    g.fillStyle='#16293D';g.strokeStyle=`hsla(${hue},70%,65%,.7)`;
+    g.beginPath();g.arc(0,0,11,0,TAU);g.fill();g.stroke();
+    g.fillStyle=`hsla(${hue},70%,65%,.9)`;g.beginPath();g.arc(0,0,3,0,TAU);g.fill();g.restore()});
+  /* cargo ship event */
+  g.restore();
+  station.cargoT-=.016*_dt;
+  if(station.cargoT<=0&&!station.cargo){station.cargoT=rnd(60,90);station.cargo={t:0}}
+  if(station.cargo){const c=station.cargo;c.t+=.0022*_dt;
+    let cx,cy;if(c.t<.4){cx=lerp(ST.x-1400,ST.x-260,c.t/.4);cy=ST.y-160+Math.sin(c.t*8)*10}
+    else if(c.t<.6){cx=ST.x-260;cy=ST.y-160}
+    else if(c.t<1){cx=lerp(ST.x-260,ST.x-1400,(c.t-.6)/.4);cy=ST.y-160}
+    else{station.cargo=null;cx=-9999}
+    if(cx>-9000){const[sx2,sy2]=w2s(cx,cy);
+      g.save();g.translate(sx2,sy2);g.scale(cam.z,cam.z);
+      g.fillStyle='#22384F';g.strokeStyle='rgba(255,196,107,.6)';
+      rrect(-26,-8,52,16,5);g.fill();g.stroke();
+      g.fillStyle='rgba(255,196,107,.9)';g.beginPath();g.arc(-26,0,3,0,TAU);g.fill();
+      if(c.t<.4||c.t>.6){g.fillStyle='rgba(255,180,90,.8)';
+        g.beginPath();g.moveTo(c.t>.6?26:-26,-4);g.lineTo((c.t>.6?40:-40)+rnd(-3,3),0);g.lineTo(c.t>.6?26:-26,4);g.fill()}
+      g.restore()}}
+  const[lx,ly]=w2s(ST.x,ST.y);
+  g.font=`600 ${Math.max(10,12*cam.z)|0}px 'Chakra Petch'`;g.textAlign='center';
+  g.fillStyle='rgba(111,231,255,.8)';g.fillText('STATION INTELLECT-01',lx,ly+150*cam.z);
+  g.textAlign='left';
+}
+function drawShuttle(){
+  if(shuttle.dockedAt==='station'){shuttle.x=ST.x+170;shuttle.y=ST.y+30;shuttle.ang=0}
+  const[px,py]=w2s(shuttle.x,shuttle.y);if(off(px,py,160))return;const s=cam.z;
+  g.save();g.translate(px,py);g.rotate(shuttle.ang);g.scale(s,s);
+  /* engine flame */
+  if(shuttle.flame>0){const fl=rnd(22,38);g.fillStyle='rgba(255,170,70,.9)';
+    g.beginPath();g.moveTo(-30,-5);g.lineTo(-30-fl,rnd(-4,4));g.lineTo(-30,5);g.fill();
+    g.fillStyle='rgba(255,240,200,.9)';g.beginPath();g.moveTo(-30,-2.5);g.lineTo(-30-fl*.5,0);g.lineTo(-30,2.5);g.fill()}
+  if(shuttle.retro>0){g.fillStyle='rgba(180,220,255,.8)';
+    [[34,-6],[34,6]].forEach(([fx,fy])=>{g.beginPath();g.moveTo(fx,fy-2);g.lineTo(fx+rnd(8,14),fy);g.lineTo(fx,fy+2);g.fill()})}
+  /* body */
+  g.fillStyle='#E8F1F8';g.strokeStyle='#8FA9C0';g.lineWidth=1.6;
+  g.beginPath();g.moveTo(36,0);g.quadraticCurveTo(34,-10,18,-11);g.lineTo(-24,-9);
+  g.quadraticCurveTo(-32,-6,-32,0);g.quadraticCurveTo(-32,6,-24,9);g.lineTo(18,11);
+  g.quadraticCurveTo(34,10,36,0);g.closePath();g.fill();g.stroke();
+  /* accent stripe */
+  g.strokeStyle=DATA.suitAccent;g.lineWidth=2.4;
+  g.beginPath();g.moveTo(-24,-5);g.lineTo(16,-6.5);g.stroke();
+  /* fins */
+  g.fillStyle='#C9D9E8';g.beginPath();g.moveTo(-18,-9);g.lineTo(-30,-20);g.lineTo(-24,-8);g.fill();
+  g.beginPath();g.moveTo(-18,9);g.lineTo(-30,20);g.lineTo(-24,8);g.fill();
+  /* canopy */
+  g.fillStyle='rgba(60,110,160,.85)';g.beginPath();g.ellipse(16,-3,9,6,-.2,0,TAU);g.fill();
+  g.strokeStyle='rgba(255,255,255,.5)';g.beginPath();g.ellipse(16,-3,9,6,-.2,-2.4,-1.2);g.stroke();
+  if(shuttle.occupied){g.fillStyle='#fff';g.beginPath();g.arc(16,-3,3.4,0,TAU);g.fill();
+    g.fillStyle=DATA.skin;g.beginPath();g.arc(16,-3,2.4,0,TAU);g.fill()}
+  /* hatch */
+  if(shuttle.hatch>0){g.strokeStyle='rgba(111,231,255,.8)';g.lineWidth=1.4;
+    g.beginPath();g.arc(0,-11,7,Math.PI,Math.PI+shuttle.hatch*2.6);g.stroke()}
+  /* name */
+  g.font="600 5.5px 'Chakra Petch'";g.fillStyle='#5A7B99';g.fillText('CURIOSITY-II',-14,3.5);
+  g.restore();
+}
+function drawAstro(){
+  if(astro.hidden)return;
+  const[px,py]=w2s(astro.x,astro.y);const s=cam.z*astro.scaleF*1.15;
+  if(off(px,py,120)||s<=0)return;
+  g.save();g.translate(px,py);g.rotate(astro.ang);g.scale(s,s);
+  const suit='#E8F1F8',shade='#C2D2E2',line='#8FA9C0',acc=astro.aurora?`hsl(${(T*50)%360},85%,62%)`:DATA.suitAccent;
+  g.lineWidth=1.6;g.strokeStyle=line;
+  /* jet seek flame */
+  if(astro.seek){g.fillStyle='rgba(255,180,80,.85)';const fl=rnd(10,18);
+    g.beginPath();g.moveTo(-16,18);g.lineTo(-16-fl,24+rnd(-3,3));g.lineTo(-12,26);g.fill()}
+  /* PLSS backpack */
+  g.fillStyle='#A9BCCE';rrect(-24,-18,13,38,5);g.fill();g.stroke();
+  g.fillStyle=Math.sin(T*3)>0?'#8BF0A0':'#33506B';g.beginPath();g.arc(-18,-12,1.8,0,TAU);g.fill();
+  g.fillStyle=Math.cos(T*2.3)>0?'#6FE7FF':'#33506B';g.beginPath();g.arc(-18,-6,1.8,0,TAU);g.fill();
+  /* legs */
+  g.fillStyle=suit;
+  rrect(-8,28,11,22,5);g.fill();g.stroke();rrect(5,28,11,22,5);g.fill();g.stroke();
+  g.fillStyle=shade;rrect(-8,44,11,8,4);g.fill();g.stroke();rrect(5,44,11,8,4);g.fill();g.stroke();
+  g.strokeStyle=acc;g.lineWidth=2;
+  g.beginPath();g.moveTo(-6,30);g.lineTo(-6,42);g.moveTo(13,30);g.lineTo(13,42);g.stroke();
+  g.strokeStyle=line;g.lineWidth=1.6;
+  /* torso */
+  g.fillStyle=suit;rrect(-13,-6,32,36,10);g.fill();g.stroke();
+  /* chest panel */
+  g.fillStyle='#16293D';rrect(-5,0,18,11,3);g.fill();g.stroke();
+  ['#FF6B81','#FFC46B','#8BF0A0'].forEach((c,i)=>{g.fillStyle=Math.sin(T*2+i*1.7)>0?c:'#33506B';
+    g.beginPath();g.arc(-1+i*6,5.5,1.6,0,TAU);g.fill()});
+  /* mission patch + initials */
+  g.fillStyle=acc;g.beginPath();g.arc(-8,-1,4.4,0,TAU);g.fill();
+  g.fillStyle='#fff';g.font="700 4px 'Chakra Petch'";g.textAlign='center';
+  g.fillText(DATA.initials,-8,.6);g.textAlign='left';
+  /* utility belt */
+  g.fillStyle=shade;rrect(-13,24,32,5,2);g.fill();g.stroke();
+  g.fillStyle='#9FB3C8';rrect(-9,24,6,7,2);g.fill();rrect(8,24,6,7,2);g.fill();
+  /* LEFT arm (wrist display) */
+  g.save();g.translate(-11,-2);g.rotate(astro.LA);
+  g.fillStyle=suit;rrect(-4,0,9,22,4);g.fill();g.stroke();
+  g.fillStyle=shade;rrect(-4,18,9,7,3);g.fill();g.stroke();
+  g.fillStyle='#16293D';rrect(-3,12,7,5,1);g.fill();
+  if(astro.item==='wrist'){g.globalAlpha=.85;
+    g.fillStyle='rgba(111,231,255,.18)';g.strokeStyle='rgba(111,231,255,.7)';g.lineWidth=.8;
+    g.beginPath();g.moveTo(0,12);g.lineTo(-16,-2);g.lineTo(8,-8);g.lineTo(8,8);g.closePath();g.fill();g.stroke();
+    g.strokeStyle='rgba(111,231,255,.5)';
+    for(let i=0;i<3;i++){g.beginPath();g.moveTo(-12+i,0-i*3);g.lineTo(5,-2-i*3);g.stroke()}
+    g.globalAlpha=1;g.lineWidth=1.6;g.strokeStyle=line}
+  g.restore();
+  /* RIGHT arm (wave/point/tablet) */
+  g.save();g.translate(17,-2);g.rotate(astro.RA+(astro.beh==='wave'?Math.sin(T*12)*.5:0));
+  g.fillStyle=suit;rrect(-4.5,0,9,22,4);g.fill();g.stroke();
+  g.fillStyle=shade;rrect(-4.5,18,9,7,3);g.fill();g.stroke();
+  if(astro.beh==='thumbs'){g.fillStyle=shade;rrect(-2,24,4,6,2);g.fill()}
+  if(astro.item==='tablet'){g.fillStyle='#16293D';g.strokeStyle='rgba(111,231,255,.7)';
+    rrect(-12,22,20,14,2);g.fill();g.stroke();
+    g.fillStyle='rgba(111,231,255,.25)';rrect(-10,24,16,10,1);g.fill();
+    g.globalAlpha=.7;g.strokeStyle='rgba(111,231,255,.8)';g.lineWidth=.7;
+    g.beginPath();g.moveTo(-8,32);g.lineTo(-4,27);g.lineTo(0,30);g.lineTo(4,25);g.stroke();
+    g.globalAlpha=1;g.lineWidth=1.6;g.strokeStyle=line}
+  g.restore();
+  /* ponytail (inside helmet area, floats) */
+  g.strokeStyle=DATA.hair;g.lineWidth=4.5;g.lineCap='round';
+  g.beginPath();g.moveTo(-10,-32);
+  astro.pony.forEach(p=>g.lineTo(p.x,p.y));g.stroke();
+  g.lineWidth=2.5;g.beginPath();g.moveTo(-10,-34);
+  astro.pony.forEach(p=>g.lineTo(p.x,p.y-2));g.stroke();g.lineCap='butt';
+  /* neck ring */
+  g.fillStyle='#9FB3C8';rrect(-7,-14,20,5,2);g.fill();g.stroke();
+  /* helmet glass */
+  g.fillStyle='rgba(170,215,255,.10)';g.strokeStyle='rgba(200,230,255,.65)';g.lineWidth=1.8;
+  g.beginPath();g.arc(3,-30,19,0,TAU);g.fill();
+  /* face — shaped, with chin */
+  const fx=clamp((wmx-astro.x)*.012,-2.2,2.2),fy=clamp((wmy-astro.y)*.012,-1.8,1.8);
+  const hx0=3+fx*.35,hy0=-30+fy*.35;
+  /* back hair behind the face */
+  g.fillStyle=DATA.hair;
+  g.beginPath();g.ellipse(hx0-.5,hy0-1.5,12,13,0,0,TAU);g.fill();
+  /* face shape */
+  g.fillStyle=DATA.skin;
+  g.beginPath();
+  g.moveTo(hx0-9,hy0-4);
+  g.quadraticCurveTo(hx0-10,hy0+4,hx0-6,hy0+8.6);
+  g.quadraticCurveTo(hx0-3,hy0+11.6,hx0,hy0+11.9);
+  g.quadraticCurveTo(hx0+3,hy0+11.6,hx0+6,hy0+8.6);
+  g.quadraticCurveTo(hx0+10,hy0+4,hx0+9,hy0-4);
+  g.quadraticCurveTo(hx0+8,hy0-10.5,hx0,hy0-11.2);
+  g.quadraticCurveTo(hx0-8,hy0-10.5,hx0-9,hy0-4);
+  g.closePath();g.fill();
+  /* soft side shading */
+  g.fillStyle='rgba(140,80,55,.08)';
+  g.beginPath();g.ellipse(hx0+6.4,hy0+2.5,3.6,6.5,0,0,TAU);g.fill();
+  /* swept bangs */
+  g.fillStyle=DATA.hair;
+  g.beginPath();
+  g.moveTo(hx0-9.6,hy0-2);
+  g.quadraticCurveTo(hx0-11.5,hy0-10.5,hx0-4,hy0-13);
+  g.quadraticCurveTo(hx0+4,hy0-15,hx0+10.4,hy0-9);
+  g.quadraticCurveTo(hx0+11,hy0-5.5,hx0+9.6,hy0-2.4);
+  g.quadraticCurveTo(hx0+8.6,hy0-7.8,hx0+3.4,hy0-8.8);
+  g.quadraticCurveTo(hx0+5.2,hy0-6.6,hx0+4.4,hy0-5.2);
+  g.quadraticCurveTo(hx0,hy0-9.2,hx0-4.2,hy0-7.8);
+  g.quadraticCurveTo(hx0-7.8,hy0-6.6,hx0-9.6,hy0-2);
+  g.closePath();g.fill();
+  /* side strands framing the face */
+  g.strokeStyle=DATA.hair;g.lineCap='round';g.lineWidth=2.2;
+  g.beginPath();g.moveTo(hx0-9.2,hy0-3);g.quadraticCurveTo(hx0-10.8,hy0+3,hx0-8.6,hy0+8.2);g.stroke();
+  g.beginPath();g.moveTo(hx0+9.4,hy0-3);g.quadraticCurveTo(hx0+10.8,hy0+2,hx0+9,hy0+6.6);g.stroke();
+  /* hair shine */
+  g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=1.4;
+  g.beginPath();g.moveTo(hx0-5,hy0-11);g.quadraticCurveTo(hx0,hy0-12.6,hx0+5,hy0-11);g.stroke();
+  g.lineCap='butt';
+  /* eyes — lashes, iris, pupil, sparkle */
+  const open=astro.sleep?0:(astro.blink>0?.1:1);
+  const exL=hx0-3.8,exR=hx0+3.9,eyy=hy0-1+fy*.6,exo=fx*.7;
+  if(open>.5){
+    g.fillStyle='#fff';
+    g.beginPath();g.ellipse(exL+exo*.6,eyy,2.9,2.3,0,0,TAU);g.ellipse(exR+exo*.6,eyy,2.9,2.3,0,0,TAU);g.fill();
+    g.fillStyle=DATA.eyes;
+    g.beginPath();g.arc(exL+exo,eyy+fy*.25,1.75,0,TAU);g.arc(exR+exo,eyy+fy*.25,1.75,0,TAU);g.fill();
+    g.fillStyle='#1A1208';
+    g.beginPath();g.arc(exL+exo,eyy+fy*.25,.85,0,TAU);g.arc(exR+exo,eyy+fy*.25,.85,0,TAU);g.fill();
+    g.fillStyle='rgba(255,255,255,.95)';
+    g.beginPath();g.arc(exL+exo+.6,eyy-.85,.55,0,TAU);g.arc(exR+exo+.6,eyy-.85,.55,0,TAU);g.fill();
+    g.strokeStyle='#3A2A1E';g.lineWidth=1.1;g.lineCap='round';
+    g.beginPath();g.moveTo(exL-2.9,eyy-1.3);g.quadraticCurveTo(exL,eyy-3.1,exL+2.9,eyy-1.5);g.stroke();
+    g.beginPath();g.moveTo(exR-2.9,eyy-1.5);g.quadraticCurveTo(exR,eyy-3.1,exR+2.9,eyy-1.3);g.stroke();
+    g.lineCap='butt';
+  }else{
+    g.strokeStyle='#8A5A40';g.lineWidth=1.3;g.lineCap='round';
+    g.beginPath();g.moveTo(exL-2.6,eyy+.4);g.quadraticCurveTo(exL,eyy+1.7,exL+2.6,eyy+.4);g.stroke();
+    g.beginPath();g.moveTo(exR-2.6,eyy+.4);g.quadraticCurveTo(exR,eyy+1.7,exR+2.6,eyy+.4);g.stroke();
+    g.lineCap='butt';
+  }
+  /* brows */
+  g.strokeStyle='#4A332A';g.lineWidth=1.2;g.lineCap='round';
+  g.beginPath();g.moveTo(exL-2.8,eyy-3.7);g.quadraticCurveTo(exL,eyy-5,exL+2.6,eyy-4);g.stroke();
+  g.beginPath();g.moveTo(exR-2.6,eyy-4);g.quadraticCurveTo(exR,eyy-5,exR+2.8,eyy-3.7);g.stroke();
+  g.lineCap='butt';
+  /* nose */
+  g.strokeStyle='rgba(150,95,70,.55)';g.lineWidth=1;
+  g.beginPath();g.moveTo(hx0+.4+fx*.4,hy0+1.8);g.quadraticCurveTo(hx0-.6+fx*.4,hy0+3.8,hx0+.8+fx*.4,hy0+4.2);g.stroke();
+  /* lips — gentle smile */
+  const lx=hx0+fx*.4,ly=hy0+7.4;
+  g.fillStyle=DATA.lips;
+  g.beginPath();
+  g.moveTo(lx-2.9,ly);
+  g.quadraticCurveTo(lx-1.2,ly-1.4,lx,ly-.6);
+  g.quadraticCurveTo(lx+1.2,ly-1.4,lx+2.9,ly);
+  g.quadraticCurveTo(lx+1.4,ly+2,lx-1.4,ly+2);
+  g.quadraticCurveTo(lx-2.2,ly+1.2,lx-2.9,ly);
+  g.closePath();g.fill();
+  g.strokeStyle='rgba(120,50,50,.45)';g.lineWidth=.6;
+  g.beginPath();g.moveTo(lx-2.9,ly);g.quadraticCurveTo(lx,ly+.6,lx+2.9,ly);g.stroke();
+  /* blush */
+  g.fillStyle='rgba(235,120,110,.16)';
+  g.beginPath();g.ellipse(hx0-6.3,eyy+5,2.2,1.3,0,0,TAU);g.ellipse(hx0+6.5,eyy+5,2.2,1.3,0,0,TAU);g.fill();
+  if(astro.sleep){g.font="600 7px 'Chakra Petch'";g.fillStyle='rgba(207,231,255,.7)';
+    g.fillText('z',22,-46+Math.sin(T*2)*2);g.fillText('Z',28,-54+Math.cos(T*2)*2)}
+  /* visor reflection + rim */
+  const refl=g.createLinearGradient(-13,-48,22,-15);
+  refl.addColorStop(0,'rgba(255,255,255,.20)');refl.addColorStop(.45,'rgba(255,255,255,.02)');refl.addColorStop(1,'rgba(140,200,255,.10)');
+  g.fillStyle=refl;g.beginPath();g.arc(3,-30,19,0,TAU);g.fill();
+  g.strokeStyle=astro.gold?'#FFD166':'rgba(200,230,255,.65)';g.lineWidth=1.8;
+  g.beginPath();g.arc(3,-30,19,0,TAU);g.stroke();
+  g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=2;
+  g.beginPath();g.arc(3,-30,15,-2.4+Math.sin(T*.7)*.2,-1.4+Math.sin(T*.7)*.2);g.stroke();
+  /* name tag */
+  g.font="600 6.5px 'Chakra Petch'";g.fillStyle='rgba(111,231,255,.85)';g.textAlign='center';
+  g.fillText((DATA.callsign||DATA.name).replace(/[\[\]]/g,''),3,64);g.textAlign='left';
+  g.restore();
+}
+function drawAlien(){
+  const[px,py]=w2s(alien.x,alien.y);if(off(px,py,90))return;const s=cam.z*alien.scale;
+  const hue=alien.hue;
+  /* ribbon tail */
+  if(alien.hist.length>2){g.lineCap='round';
+    for(let i=1;i<alien.hist.length;i++){const a=alien.hist[i],b=alien.hist[i-1];
+      const[ax,ay]=w2s(a.x,a.y),[bx,by]=w2s(b.x,b.y);
+      g.strokeStyle=`hsla(${hue},85%,65%,${.5*(1-i/alien.hist.length)})`;
+      g.lineWidth=Math.max(.5,(7-i*.45)*s);
+      g.beginPath();g.moveTo(bx,by);g.lineTo(ax,ay);g.stroke()}
+    g.lineCap='butt'}
+  g.save();g.translate(px,py);g.scale(s,s);
+  /* glow */
+  const gl=g.createRadialGradient(0,0,2,0,0,34);
+  gl.addColorStop(0,`hsla(${hue},90%,70%,.5)`);gl.addColorStop(1,'transparent');
+  g.fillStyle=gl;g.beginPath();g.arc(0,0,34,0,TAU);g.fill();
+  /* body teardrop */
+  const bob=Math.sin(performance.now()*.003)*2+(alien.mood==='dance'?Math.sin(alien.dance*3)*4:0);
+  g.translate(0,bob);
+  const bd=g.createRadialGradient(-3,-6,1,0,0,18);
+  bd.addColorStop(0,`hsl(${hue},95%,82%)`);bd.addColorStop(.7,`hsl(${hue},80%,58%)`);bd.addColorStop(1,`hsl(${hue},75%,42%)`);
+  g.fillStyle=bd;
+  g.beginPath();g.moveTo(0,-20);g.bezierCurveTo(13,-18,15,2,9,12);
+  g.bezierCurveTo(5,17,-5,17,-9,12);g.bezierCurveTo(-15,2,-13,-18,0,-20);g.fill();
+  /* inner core */
+  g.fillStyle=`hsla(${hue},100%,88%,.9)`;
+  g.beginPath();g.ellipse(0,2,4,5.5+Math.sin(performance.now()*.004)*1.2,0,0,TAU);g.fill();
+  /* arms */
+  const wav=alien.mood==='greet'||alien.mood==='dance'?Math.sin(performance.now()*.014)*1:0;
+  g.strokeStyle=`hsl(${hue},80%,70%)`;g.lineWidth=2.6;g.lineCap='round';
+  g.beginPath();g.moveTo(-10,2);g.quadraticCurveTo(-15,0+wav*-6,-17,-4+wav*-8);g.stroke();
+  g.beginPath();g.moveTo(10,2);g.quadraticCurveTo(15,0+wav*-6,17,-4+wav*-8);g.stroke();g.lineCap='butt';
+  /* eyes */
+  const open=(alien.mood==='sleep'||alien.mood==='pet')?0:(alien.blink>0?.1:1);
+  const scared=alien.mood==='scared'||meteorScare>0;
+  if(open>.5){g.fillStyle='#06251B';
+    const ew=scared?4.2:3.4,eh=scared?5.4:4.4;
+    g.beginPath();g.ellipse(-5,-8,ew,eh,0,0,TAU);g.ellipse(5,-8,ew,eh,0,0,TAU);g.fill();
+    g.fillStyle='#fff';
+    g.beginPath();g.arc(-4,-9.5,1.4,0,TAU);g.arc(6,-9.5,1.4,0,TAU);g.fill();
+    g.fillStyle=`hsla(${hue},100%,85%,.9)`;
+    g.beginPath();g.arc(-5.8,-7,.8,0,TAU);g.arc(4.2,-7,.8,0,TAU);g.fill();
+  }else{g.strokeStyle='#06251B';g.lineWidth=1.6;
+    g.beginPath();g.moveTo(-8,-8);g.quadraticCurveTo(-5,-6.4,-2,-8);
+    g.moveTo(2,-8);g.quadraticCurveTo(5,-6.4,8,-8);g.stroke()}
+  /* mouth */
+  g.strokeStyle='#06251B';g.lineWidth=1.4;
+  if(scared){g.beginPath();g.arc(0,-1,2,0,TAU);g.stroke()}
+  else{g.beginPath();g.arc(0,-2,3,.25,Math.PI-.25);g.stroke()}
+  g.restore();
+  if(alien.mood==='happy'&&Math.random()<.05)burst(alien.x,alien.y-26,2,'255,140,170',.4);
+}
+
+/* ═══════════════ MAIN LOOP ═══════════════ */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(33,now-last)/16.6;last=now;T+=dt*.016;_dt=dt;
+  cutTick(dt);
+  updAstro(dt);updAlien(dt);
+  debris.forEach(d=>{if(!d.grab&&!d.carried){d.x+=d.vx*dt;d.y+=d.vy*dt;d.vx*=.999;d.vy*=.999;d.rot+=d.vr*dt;
+    const ds=Math.hypot(d.x-astro.x,d.y-astro.y);
+    if(ds<64&&!astro.hidden){d.vx+=(d.x-astro.x)/ds*.12;d.vy+=(d.y-astro.y)/ds*.12}}});
+  /* camera */
+  if(cam.mode==='astro'){cam.tx=astro.x;cam.ty=astro.y}
+  if(cam.mode==='shuttle'){cam.tx=shuttle.x;cam.ty=shuttle.y;cam.tz=.78}
+  cam.x=lerp(cam.x,cam.tx,.06*dt);cam.y=lerp(cam.y,cam.ty,.06*dt);cam.z=lerp(cam.z,cam.tz,.06*dt);
+  /* draw */
+  g.clearRect(0,0,W,H);
+  g.save();
+  if(shakeV>.01)g.translate((Math.random()-.5)*shakeV*16,(Math.random()-.5)*shakeV*16);
+  shakeV*=Math.pow(.88,dt);
+  qTick(now);
+  nebulas.forEach((n,i)=>{const[nx,ny]=w2s(n.x+Math.sin(T*.1+i)*40,n.y+Math.cos(T*.08+i)*30);
+    const r=n.r*cam.z;const gr=g.createRadialGradient(nx,ny,0,nx,ny,r);
+    gr.addColorStop(0,`rgba(${n.c},.10)`);gr.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=gr;g.fillRect(nx-r,ny-r,r*2,r*2)});
+  drawSunWorld();
+  const[hxL,hyL]=w2s(HOLE.x,HOLE.y);const lensOn=!QLOW&&hxL>-400&&hxL<W+400&&hyL>-400&&hyL<H+400;
+  layers.forEach((L,li)=>{L.pts.forEach((s,si)=>{
+    if(QLOW&&si%2)return;
+    s.tw+=s.sp*dt;
+    let sxp=(((s.x-cam.x*L.f*cam.z)%2000)+2000)%2000-(2000-W)/2,
+        syp=(((s.y-cam.y*L.f*cam.z)%1400)+1400)%1400-(1400-H)/2;
+    if(sxp<-10||sxp>W+10||syp<-10||syp>H+10)return;
+    if(lensOn){const dx=sxp-hxL,dy=syp-hyL,d=Math.hypot(dx,dy);
+      if(d<300&&d>8){const b=(1-d/300)*26;sxp+=-dy/d*b;syp+=dx/d*b}}
+    g.globalAlpha=.25+Math.abs(Math.sin(s.tw))*.6;
+    if(warp>0.08){const len=warp*46*L.f;
+      g.strokeStyle='#CFE7FF';g.lineWidth=L.s*.8;
+      g.beginPath();g.moveTo(sxp,syp);g.lineTo(sxp-burnDir.x*len,syp-burnDir.y*len);g.stroke();
+    }else{g.fillStyle='#CFE7FF';g.beginPath();g.arc(sxp,syp,L.s*.8,0,TAU);g.fill()}
+  })});
+  g.globalAlpha=1;
+  /* earth */
+  const[ex,ey]=w2s(EARTH.x,EARTH.y);
+  if(!off(ex,ey,80)){const r=26*cam.z;const bd=g.createRadialGradient(ex-r*.3,ey-r*.3,1,ex,ey,r);
+    bd.addColorStop(0,'#7FD4FF');bd.addColorStop(.6,'#1F6FBF');bd.addColorStop(1,'#0A2A55');
+    g.fillStyle=bd;g.beginPath();g.arc(ex,ey,r,0,TAU);g.fill();
+    g.font="9px 'Chakra Petch'";g.textAlign='center';g.fillStyle='rgba(127,212,255,.7)';
+    g.fillText('EARTH — HOME',ex,ey+r+16);g.textAlign='left'}
+  /* black hole */
+  const[hx,hy]=w2s(HOLE.x,HOLE.y);
+  if(!off(hx,hy,200)){const r=60*cam.z;g.save();g.translate(hx,hy);g.rotate(T*.5);
+    for(let i=0;i<3;i++){g.strokeStyle=`rgba(160,120,255,${.4-i*.1})`;g.lineWidth=2;
+      g.beginPath();g.ellipse(0,0,r*(1.3+i*.5),r*(.4+i*.18),i,0,TAU);g.stroke()}
+    g.fillStyle='#000';g.beginPath();g.arc(0,0,r*.8,0,TAU);g.fill();
+    g.strokeStyle='rgba(200,170,255,.8)';g.beginPath();g.arc(0,0,r*.82,0,TAU);g.stroke();g.restore()}
+  /* galaxy */
+  const[gx,gy]=w2s(GAL.x,GAL.y);
+  if(!off(gx,gy,460)){
+    const gr=g.createRadialGradient(gx,gy,0,gx,gy,360*cam.z);
+    gr.addColorStop(0,'rgba(140,110,220,.12)');gr.addColorStop(1,'transparent');
+    g.fillStyle=gr;g.beginPath();g.arc(gx,gy,360*cam.z,0,TAU);g.fill();
+    DATA.galaxy.forEach((c,ci)=>{const cs=gstars.filter(s=>s.cat===ci);
+      g.strokeStyle=c.color;g.globalAlpha=.28;g.lineWidth=1;g.beginPath();
+      cs.forEach((s,i)=>{const[sx2,sy2]=w2s(s.x,s.y);i?g.lineTo(sx2,sy2):g.moveTo(sx2,sy2)});g.stroke();g.globalAlpha=1});
+    gstars.forEach(s=>{s.ph+=.04*dt;const[sx2,sy2]=w2s(s.x,s.y);
+      const c=DATA.galaxy[s.cat].color,h=hover&&hover.gs===s;
+      g.fillStyle=c;g.shadowColor=c;g.shadowBlur=h?16:7;
+      g.beginPath();g.arc(sx2,sy2,(h?5:3)+Math.sin(s.ph)*.8,0,TAU);g.fill();g.shadowBlur=0;
+      if(h||cam.z>.62){g.font=`${h?'600 11':'400 9.5'}px 'Chakra Petch'`;
+        g.fillStyle=h?'#fff':'rgba(207,231,255,.7)';g.fillText(s.label,sx2+9,sy2+3)}});
+    g.font="600 12px 'Chakra Petch'";g.textAlign='center';g.fillStyle='rgba(207,231,255,.8)';
+    g.fillText('SKILL GALAXY',gx,gy+270*cam.z);g.textAlign='left'}
+  /* relay */
+  const[bx,by]=w2s(RELAY.x,RELAY.y);
+  if(!off(bx,by,170)){const s=cam.z;g.save();g.translate(bx,by);g.scale(s,s);
+    g.strokeStyle='rgba(111,231,255,.6)';g.fillStyle='#10202F';
+    g.beginPath();g.moveTo(0,-44);g.lineTo(16,8);g.lineTo(-16,8);g.closePath();g.fill();g.stroke();
+    rrect(-26,8,52,16,4);g.fill();g.stroke();
+    const pl=(T*1.4)%1;g.strokeStyle=`rgba(139,240,160,${1-pl})`;
+    g.beginPath();g.arc(0,-44,8+pl*46,0,TAU);g.stroke();
+    g.fillStyle='#8BF0A0';g.beginPath();g.arc(0,-44,3,0,TAU);g.fill();
+    g.font="600 10px 'Chakra Petch'";g.textAlign='center';g.fillStyle='rgba(139,240,160,.85)';
+    g.fillText('MISSION RELAY — EXPEDITION LOG',0,44);g.textAlign='left';g.restore()}
+  planets.forEach(drawPlanet);
+  if(vaultOpen)drawPlanet(VAULT,99);
+  drawStation();
+  drawShuttle();
+  /* debris */
+  debris.forEach(d=>{const[dx,dy]=w2s(d.x,d.y);if(off(dx,dy,60))return;
+    g.save();g.translate(dx,dy);g.rotate(d.rot);g.scale(cam.z,cam.z);
+    g.fillStyle=d.grab||d.carried?'#FFC46B':'#5A6B82';g.strokeStyle='rgba(111,231,255,.25)';
+    g.beginPath();g.moveTo(-d.r,2);g.lineTo(-d.r*.3,-d.r);g.lineTo(d.r*.8,-d.r*.5);g.lineTo(d.r,d.r*.5);g.lineTo(0,d.r);g.closePath();g.fill();g.stroke();g.restore()});
+  /* fragments */
+  frags.forEach(f=>{if(f.got)return;const[fx,fy]=w2s(f.x,f.y);if(off(fx,fy,40))return;
+    f.ph+=.05*dt;const s=(1+Math.sin(f.ph)*.25)*cam.z;
+    g.save();g.translate(fx,fy);g.rotate(f.ph*.4);g.scale(s,s);
+    g.fillStyle='#FFD988';g.shadowColor='#FFC46B';g.shadowBlur=18;star4(0,0,9);g.fill();g.shadowBlur=0;g.restore()});
+  /* signals */
+  for(let i=signals.length-1;i>=0;i--){const sg=signals[i];sg.t+=.005*dt;
+    if(sg.t>=1){burst(EARTH.x,EARTH.y,30,'139,240,160',1.4);signals.splice(i,1);continue}
+    const x=lerp(sg.x,EARTH.x,sg.t),y=lerp(sg.y,EARTH.y,sg.t)+Math.sin(sg.t*22)*40*(1-sg.t);
+    const[px2,py2]=w2s(x,y);
+    g.fillStyle='#FFC46B';g.shadowColor='#FFC46B';g.shadowBlur=14;
+    g.beginPath();g.arc(px2,py2,3.5,0,TAU);g.fill();g.shadowBlur=0;
+    if(cam.mode==='free'){cam.tx=x;cam.ty=y}}
+  drawGhSats();drawDodgeRocks();
+  drawAlien();drawAstro();
+  /* particles */
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;p.life-=p.dec*dt;
+    if(p.life<=0){parts.splice(i,1);continue}
+    const[px2,py2]=w2s(p.x,p.y);g.globalAlpha=p.life;g.fillStyle=`rgba(${p.c},1)`;
+    g.beginPath();g.arc(px2,py2,p.r*p.life*cam.z*1.4,0,TAU);g.fill()}
+  g.globalAlpha=1;
+  for(let i=meteors.length-1;i>=0;i--){const m=meteors[i];m.x+=m.vx*dt;m.y+=m.vy*dt;m.life-=.004*dt;
+    if(m.y>H+30||m.life<=0){meteors.splice(i,1);continue}
+    const gr=g.createLinearGradient(m.x,m.y,m.x-m.vx*14,m.y-m.vy*14);
+    gr.addColorStop(0,'rgba(255,220,160,.9)');gr.addColorStop(1,'rgba(255,220,160,0)');
+    g.strokeStyle=gr;g.lineWidth=2;g.beginPath();g.moveTo(m.x,m.y);g.lineTo(m.x-m.vx*14,m.y-m.vy*14);g.stroke()}
+  g.restore();
+  if(entryFx>0){entryFx*=Math.pow(.975,dt);
+    g.fillStyle=`rgba(255,120,50,${.12*entryFx})`;g.fillRect(0,0,W,H);
+    const[shx,shy]=w2s(shuttle.x,shuttle.y);
+    g.strokeStyle=`rgba(255,170,80,${.7*entryFx})`;g.lineWidth=3;
+    g.beginPath();g.arc(shx,shy,40*cam.z,shuttle.ang-1.1,shuttle.ang+1.1);g.stroke();
+    if(Math.random()<.4)puff(shuttle.x+rnd(-60,60),shuttle.y+rnd(-30,50),Math.PI/2,2,'235,240,250')}
+  drawFlareScreen();
+  /* hover + bubble */
+  hoverCheck();
+  if(bubble.classList.contains('show')){
+    const t=bubTarget==='astro'?astro:alien;const[bx2,by2]=w2s(t.x,t.y);
+    bubble.style.left=clamp(bx2+26,8,W-260)+'px';bubble.style.top=Math.max(8,by2-110)+'px'}
+  requestAnimationFrame(frame);
+}
+function hoverCheck(){
+  if(inUI||domLbl){hover=null;tool.className=domLbl?'ui':'';toolLbl.textContent=domLbl||'';return}
+  hover=null;let lbl='';
+  const f=frags.find(f=>!f.got&&Math.hypot(f.x-wmx,f.y-wmy)<30);
+  const d=debris.find(d=>Math.hypot(d.x-wmx,d.y-wmy)<d.r+12);
+  const pi=planets.findIndex(p=>Math.hypot(p.x-wmx,p.y-wmy)<p.r+34);
+  const gs=gstars.find(s=>Math.hypot(s.x-wmx,s.y-wmy)<16);
+  if(f){hover='frag';lbl='COLLECT'}
+  else if(d){hover='deb';lbl='GRAB & THROW'}
+  else if(pi>-1){hover='p'+pi;lbl=astro.onKey==='p'+pi?'REOPEN SURVEY':'TARGET IN NAV'}
+  else if(gs){hover={gs};lbl=DATA.galaxy[gs.cat].name.toUpperCase()}
+  else if(Math.hypot(wmx-alien.x,wmy-alien.y)<48){hover='alien';lbl='POKE '+DATA.alienName}
+  else if(!astro.hidden&&Math.hypot(wmx-astro.x,wmy-astro.y)<64){hover='astro';lbl='SAY HI'}
+  else if(Math.hypot(wmx-(ST.x-30),wmy-(ST.y-62))<34){hover='dish';lbl='ALIGN DISH'}
+  else if((hover=ghAt(wmx,wmy))){lbl='OPEN REPO ★'+hover.gh.stars}
+  else if(Math.hypot(wmx-ST.x,wmy-ST.y)<210){hover='station';lbl='TARGET STATION'}
+  else if(Math.hypot(wmx-RELAY.x,wmy-RELAY.y)<150){hover='beacon';lbl='TARGET RELAY'}
+  if(hover==='alien'){petT+=_dt/60;if(petT>0.85&&alien.mood!=='pet'){alien.mood='pet';alien.moodT=2.5;ach('pet');
+    if(Math.random()<.6)blip(rnd(700,900),.08,.02)}}
+  else petT=0;
+  if(alien.mood==='pet'&&Math.random()<.12)burst(alien.x,alien.y-28,1,'255,150,190',.4);
+  tool.className=hover?(hover==='deb'?'grab':'scan'):'';toolLbl.textContent=lbl;
+}
+
+/* ═══════════════ FEATURE PACK · cinematics · games · live data ═══════════════ */
+let warp=0,burnDir={x:1,y:0},shakeV=0,entryFx=0,petT=0;
+function cine(on){document.documentElement.classList.toggle('cinema',!!on)}
+
+/* ---- quality governor ---- */
+let QLOW=false,_qAcc=0,_qN=0,_qLast=performance.now();
+function qTick(now){const ms=now-_qLast;_qLast=now;_qAcc+=ms;_qN++;
+  if(_qN>=90){const avg=_qAcc/_qN;_qAcc=0;_qN=0;
+    if(avg>24&&!QLOW){QLOW=true}else if(avg<17&&QLOW){QLOW=false}}}
+
+/* ---- sun + lens flare ---- */
+const SUN={x:2300,y:-2150};
+function drawSunWorld(){const[sx2,sy2]=w2s(SUN.x,SUN.y);if(off(sx2,sy2,700))return;
+  const r=90*cam.z;const gl=g.createRadialGradient(sx2,sy2,0,sx2,sy2,r*6);
+  gl.addColorStop(0,'rgba(255,240,200,.9)');gl.addColorStop(.08,'rgba(255,220,150,.5)');
+  gl.addColorStop(.3,'rgba(255,190,110,.12)');gl.addColorStop(1,'transparent');
+  g.fillStyle=gl;g.beginPath();g.arc(sx2,sy2,r*6,0,TAU);g.fill();
+  g.fillStyle='#FFF6E0';g.beginPath();g.arc(sx2,sy2,r*.5,0,TAU);g.fill()}
+function drawFlareScreen(){if(QLOW)return;
+  const[sx2,sy2]=w2s(SUN.x,SUN.y);
+  if(sx2<-300||sx2>W+300||sy2<-300||sy2>H+300)return;
+  let vis=1;
+  planets.forEach(p=>{const[px,py]=w2s(p.x,p.y);if(Math.hypot(sx2-px,sy2-py)<p.r*cam.z)vis=0});
+  const[stx,sty]=w2s(ST.x,ST.y);if(Math.hypot(sx2-stx,sy2-sty)<230*cam.z)vis=0;
+  if(vis<=0)return;
+  const cx2=W/2,cy2=H/2,vx=cx2-sx2,vy=cy2-sy2;
+  [[.3,26,'255,210,140',.10],[.55,12,'111,231,255',.10],[.85,38,'255,180,110',.07],[1.18,16,'200,160,255',.09]]
+  .forEach(([t,r,c,a])=>{g.fillStyle=`rgba(${c},${a*vis})`;
+    g.beginPath();g.arc(sx2+vx*t,sy2+vy*t,r,0,TAU);g.fill()});
+  g.strokeStyle=`rgba(255,235,200,${.18*vis})`;g.lineWidth=1.5;
+  g.beginPath();g.moveTo(sx2-130,sy2);g.lineTo(sx2+130,sy2);g.stroke()}
+
+/* ---- asteroid dodge mini-game (during burns) ---- */
+let dRocks=[],dodging=false,dodged=0,dHit=0,dSpawn=0;
+function dodgeStart(){dodging=true;dRocks=[];dodged=0;dHit=0;dSpawn=0;
+  objective('BURN PHASE — <b>STEER WITH YOUR MOUSE</b> · dodge the rocks')}
+function dodgeTick(distLeft){
+  if(!dodging)return;
+  const per={x:-burnDir.y,y:burnDir.x};
+  const lat=clamp(((my/H)-.5)*2,-1,1)*3.4;
+  shuttle.x+=per.x*lat*_dt;shuttle.y+=per.y*lat*_dt;
+  dSpawn+=_dt/60;
+  if(dSpawn>.42&&distLeft>500&&dRocks.length<12){dSpawn=0;
+    dRocks.push({x:shuttle.x+burnDir.x*1050+per.x*rnd(-320,320),
+                 y:shuttle.y+burnDir.y*1050+per.y*rnd(-320,320),
+                 r:rnd(11,21),rot:rnd(0,TAU),vr:rnd(-.03,.03),dead:false})}
+  dRocks.forEach(rk=>{if(rk.dead)return;rk.rot+=rk.vr*_dt;
+    const dx=rk.x-shuttle.x,dy=rk.y-shuttle.y,d=Math.hypot(dx,dy);
+    if(d<rk.r+20){rk.dead=true;dHit++;shakeV=.55;burst(rk.x,rk.y,16,'255,170,90',1.2);blip(140,.2,.07)}
+    else if(dx*burnDir.x+dy*burnDir.y<-140){rk.dead=true;dodged++;blip(1500,.04,.02)}})}
+function dodgeEnd(){if(!dodging)return;dodging=false;
+  if(dodged>0)setTimeout(()=>toast('◈ DODGED <b>'+dodged+'</b> ASTEROID'+(dodged>1?'S':'')+(dHit===0?' — CLEAN RUN ✦':' · '+dHit+' graze'+(dHit>1?'s':''))),700);
+  if(dodged>=6&&dHit===0)ach('ace');dRocks=[]}
+function drawDodgeRocks(){if(!dodging)return;
+  dRocks.forEach(rk=>{if(rk.dead)return;const[dx,dy]=w2s(rk.x,rk.y);if(off(dx,dy,60))return;
+    g.save();g.translate(dx,dy);g.rotate(rk.rot);g.scale(cam.z,cam.z);
+    g.fillStyle='#6B5A48';g.strokeStyle='rgba(255,196,107,.5)';g.lineWidth=1.4;
+    g.beginPath();g.moveTo(-rk.r,2);g.lineTo(-rk.r*.3,-rk.r);g.lineTo(rk.r*.8,-rk.r*.5);g.lineTo(rk.r,rk.r*.5);g.lineTo(0,rk.r);g.closePath();g.fill();g.stroke();g.restore()})}
+
+/* ---- LUMEN: call, fetch ---- */
+cv.addEventListener('dblclick',e=>{const[wx,wy]=s2w(e.clientX,e.clientY);
+  alien.cmd={x:wx,y:wy};alien.mood='excited';alien.moodT=2.5;ach('caller');
+  setTimeout(()=>{if(alien.mood!=='fetch')alien.cmd=null},2600);blip(1200,.07)});
+let fetchState=null;
+function maybeFetch(d){const sp=Math.hypot(d.vx,d.vy);
+  if(sp>1.6&&!fetchState&&!alien.cmd&&Math.random()<.55){
+    fetchState={rock:d,phase:'chase'};alien.mood='fetch';alien.moodT=99;
+    say("FETCH! I love fetch!")}}
+function fetchTick(sec){if(!fetchState)return;
+  const d=fetchState.rock;
+  if(fetchState.phase==='chase'){alien.cmd={x:d.x,y:d.y};
+    if(Math.hypot(alien.x-d.x,alien.y-d.y)<30){fetchState.phase='return';d.carried=true;alien.carry=d}}
+  else if(fetchState.phase==='return'){alien.cmd={x:astro.x+50,y:astro.y-20};
+    if(Math.hypot(alien.x-astro.x-50,alien.y-astro.y+20)<34){
+      d.carried=false;d.vx=d.vy=0;alien.carry=null;alien.cmd=null;
+      alien.mood='happy';alien.moodT=3;fetchState=null;ach('fetch');
+      burst(alien.x,alien.y,12,'139,240,160',.8)}}}
+
+/* ---- duo idle scene: stargazing ---- */
+setInterval(()=>{
+  if(cut||astro.sleep||panel.classList.contains('open')||fetchState)return;
+  if(Math.random()<.5)return;
+  astro.tHead=-.7;setBeh('stars');
+  alien.cmd={x:astro.x+44,y:astro.y-34};alien.mood='calm';
+  meteors.push({x:rnd(W*.2,W*.7),y:-20,vx:rnd(3,5),vy:rnd(2,3),life:1});
+  say("…she says every meteor is a deploy going well somewhere.");
+  setTimeout(()=>{alien.cmd=null},6000);
+},75000);
+
+/* ---- radio voice + waveform on her lines ---- */
+function crackle(){if(!sndOn||!AC)return;
+  const len=AC.sampleRate*.22,buf=AC.createBuffer(1,len,AC.sampleRate),d2=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d2[i]=(Math.random()*2-1)*(1-i/len);
+  const s2=AC.createBufferSource();s2.buffer=buf;
+  const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1400;bp.Q.value=1.2;
+  const gn=AC.createGain();gn.gain.value=.045;
+  s2.connect(bp);bp.connect(gn);gn.connect(AC.destination);s2.start()}
+const __say=say;
+say=function(txt,who,ms){bubble.classList.toggle('her',who==='her');
+  if(who==='her')crackle();__say(txt,who,ms)};
+
+/* ---- rank · achievements · persistence ---- */
+const ACH={hello:'FIRST WORDS — said hi to Shreya',contact:'FIRST CONTACT — poked LUMEN',
+  pilot:'PILOT — completed a planetfall',surveyor:'SURVEYOR — visited all 10 planets',
+  collector:'COLLECTOR — found all 5 fragments',vault:'CLEARANCE ◆ — opened the Vault',
+  gamer:'SIGNAL MASTER — aligned the dish',ace:'ACE PILOT — clean asteroid run',
+  fetch:'GOOD HUMAN — played fetch with LUMEN',pet:'SOFT SPOT — petted LUMEN',
+  caller:'WHISTLER — called LUMEN to you',warp:'WARP RAT — found the Konami code',
+  tx:'TRANSMITTER — messaged Earth',complete:'STAR CAPTAIN — 100% surveyed'};
+const achGot=new Set();
+function ach(id){if(achGot.has(id)||!ACH[id])return;achGot.add(id);
+  toast('🏆 ACHIEVEMENT — <b>'+ACH[id]+'</b>');blip(1180,.14,.06);blip(1560,.18,.05);
+  alien.mood='excited';alien.moodT=2.5;updateRank();saveState()}
+const T0=Date.now();
+const RANKS=[[0,'CADET'],[25,'PILOT'],[55,'COMMANDER'],[85,'CAPTAIN'],[100,'STAR CAPTAIN']];
+function rankName(p){let n='CADET';RANKS.forEach(([t,nm])=>{if(p>=t)n=nm});return n}
+function progressPct(){return Math.min(100,Math.round(visited.size/TOTAL_DEST*100))}
+function updateRank(){const p=progressPct();
+  $('#rankPct').textContent=p;$('#rankNm').textContent=rankName(p);
+  if(p>=100)ach('complete');
+  if(achGot.has('surveyor'))astro.aurora=true}
+function saveState(){try{localStorage.setItem('shv_state',JSON.stringify({
+  v:[...visited],f:frags.map(f=>f.got),a:[...achGot],vault:vaultOpen,
+  labs:station.labs,mods:station.mods,gold:!!astro.gold,aur:!!astro.aurora,cs:lastCallsign}))}catch(e){}}
+let lastCallsign='';
+function loadState(){try{const s=JSON.parse(localStorage.getItem('shv_state')||'null');if(!s)return;
+  (s.v||[]).forEach(k=>visited.add(k));
+  (s.f||[]).forEach((got,i)=>{if(got&&frags[i])frags[i].got=true});
+  $('#fragCount').textContent=frags.filter(f=>f.got).length;
+  (s.a||[]).forEach(id=>achGot.add(id));
+  if(s.vault){vaultOpen=true;addVaultDest()}
+  if(s.labs)station.labs=s.labs;
+  if(s.mods)Object.assign(station.mods,s.mods);
+  if(s.gold)astro.gold=true;if(s.aur)astro.aurora=true;
+  lastCallsign=s.cs||'';
+}catch(e){}}
+loadState();updateRank();
+$('#rankChip').addEventListener('click',()=>toast('◈ Survey destinations to rank up — <b>'+visited.size+'/'+TOTAL_DEST+'</b> surveyed · '+achGot.size+'/'+Object.keys(ACH).length+' achievements'));
+
+/* ---- the VAULT panel ---- */
+PANELS.vault=()=>{const p=DATA.vault;openPanel('◆ THE VAULT — '+p.name,
+  `<h2>${p.name}</h2><div class="sub hudfont">${p.sub} · CLEARANCE GRANTED</div><p>${p.desc}</p>
+   <div class="kv"><span class="k hudfont">STACK</span><span class="v"><span class="moons">${p.stack.map(s=>`<span class="moon hudfont">${s}</span>`).join('')}</span></span></div>
+   <div class="sats">${p.sats.map(s=>`<div class="sat"><div class="v hudfont">${s.v}</div><div class="k hudfont">${s.k}</div></div>`).join('')}</div>
+   <div class="kv"><span class="k hudfont">CHALLENGE</span><span class="v">${p.challenge}</span></div>
+   <div class="kv"><span class="k hudfont">SOLUTION</span><span class="v">${p.solution}</span></div>
+   <div class="kv"><span class="k hudfont">IMPACT</span><span class="v">${p.impact}</span></div>
+   <div class="hbtns"><a class="hbtn ghost hudfont" href="${p.code}" target="_blank" rel="noopener">CLASSIFIED SOURCE ▸ GITHUB</a></div>`)};
+
+/* ---- dish alignment puzzle → unlocks the Vault ---- */
+let dishTarget=0;
+function openDishPuzzle(){
+  if(vaultOpen){toast('◈ Dish already aligned — <b>THE VAULT</b> is on your NAV computer');return}
+  dishTarget=Math.round(rnd(12,88));
+  openPanel('UPLINK PUZZLE — ALIGN THE DISH',
+   `<p>The station's deep-space dish is misaligned. Rotate it until the signal locks — there's an <b>encrypted destination</b> hiding in the noise.</p>
+    <div class="field"><label class="hudfont">DISH BEARING</label>
+    <input type="range" class="dial" id="dishR" min="0" max="100" value="50" step="1"></div>
+    <label class="hudfont" style="font-size:9.5px;letter-spacing:.26em;color:var(--hud)">SIGNAL STRENGTH — <span id="dishPct">0</span>%</label>
+    <div class="dishbar"><i id="dishSig"></i></div>
+    <button class="transmit hudfont" id="dishLock" style="opacity:.35;pointer-events:none">◈ LOCK SIGNAL ◈</button>`);
+}
+pB.addEventListener('input',e=>{
+  if(e.target.id!=='dishR')return;
+  const v=+e.target.value,sig=Math.max(0,Math.round(100-Math.abs(v-dishTarget)*2.4));
+  $('#dishSig').style.width=sig+'%';$('#dishPct').textContent=sig;
+  if(Math.random()<.3)blip(300+sig*12,.04,.02);
+  const lock=$('#dishLock');
+  if(sig>=96){lock.style.opacity=1;lock.style.pointerEvents='auto'}
+  else{lock.style.opacity=.35;lock.style.pointerEvents='none'}
+});
+pB.addEventListener('click',e=>{
+  if(e.target.id==='dishLock'){
+    closePanel();vaultOpen=true;addVaultDest();ach('gamer');saveState();
+    burst(ST.x-30,ST.y-62,40,'200,160,255',1.5);sweep();
+    say("…what did you just unlock. WHAT DID YOU JUST UNLOCK.");
+    toast('◆ <b>ENCRYPTED DESTINATION DECODED — "THE VAULT"</b> added to your NAV computer');
+    objective('NEW DESTINATION — <b>◆ THE VAULT</b> · open NAV [N]');
+  }
+  if(e.target.id==='passDl')ach('pass')&&0;
+});
+
+/* ---- GitHub live satellites ---- */
+let ghSats=[];
+(function ghLoad(){
+  try{const c=JSON.parse(localStorage.getItem('gh_cache')||'null');
+    if(c&&Date.now()-c.t<36e5){ghBuild(c.repos);return}}catch(e){}
+  fetch('https://api.github.com/users/'+DATA.githubUser+'/repos?per_page=100')
+   .then(r=>r.ok?r.json():Promise.reject())
+   .then(repos=>{if(!Array.isArray(repos))return;
+     const top=repos.filter(r=>!r.fork)
+       .sort((a,b)=>(b.stargazers_count-a.stargazers_count)||(new Date(b.pushed_at)-new Date(a.pushed_at)))
+       .slice(0,6).map(r=>({name:r.name,stars:r.stargazers_count,url:r.html_url}));
+     try{localStorage.setItem('gh_cache',JSON.stringify({t:Date.now(),repos:top}))}catch(e){}
+     ghBuild(top);
+     toast('◈ LIVE UPLINK — <b>'+repos.length+' public repos</b> detected · top ones now orbit the station')})
+   .catch(()=>{});
+})();
+function ghBuild(top){ghSats=top.map((r,i)=>({gh:r,a:i/top.length*TAU+rnd(0,.5),R:312+i*26,sp:(.0011-i*.0001)*(i%2?1:-1)}))}
+function ghPos(s){s.a+=s.sp*_dt;return{x:ST.x+Math.cos(s.a)*s.R,y:ST.y+Math.sin(s.a)*s.R*.46}}
+function ghAt(wx,wy){for(const s of ghSats){const p=ghPos2(s);
+  if(Math.hypot(p.x-wx,p.y-wy)<26)return{gh:s.gh}}return null}
+function ghPos2(s){return{x:ST.x+Math.cos(s.a)*s.R,y:ST.y+Math.sin(s.a)*s.R*.46}}
+function drawGhSats(){if(!ghSats.length)return;
+  const[stx,sty]=w2s(ST.x,ST.y);if(off(stx,sty,900))return;
+  ghSats.forEach(s=>{const p=ghPos(s);const[px,py]=w2s(p.x,p.y);
+    g.save();g.translate(px,py);g.scale(cam.z,cam.z);g.rotate(s.a*2);
+    g.fillStyle='#16293D';g.strokeStyle='rgba(111,231,255,.7)';g.lineWidth=1.3;
+    rrect(-6,-4,12,8,2);g.fill();g.stroke();
+    g.fillStyle='rgba(60,120,200,.6)';rrect(-15,-3,7,6,1);g.fill();rrect(8,-3,7,6,1);g.fill();
+    g.fillStyle=Math.sin(T*3+s.R)>0?'#8BF0A0':'#33506B';g.beginPath();g.arc(0,0,1.6,0,TAU);g.fill();
+    g.restore();
+    if(cam.z>.5){g.font=`${Math.max(8,9*cam.z)|0}px 'Chakra Petch'`;
+      g.fillStyle='rgba(111,231,255,.65)';g.textAlign='center';
+      g.fillText(s.gh.name+(s.gh.stars?' ★'+s.gh.stars:''),px,py-14*cam.z);g.textAlign='left'}})}
+
+/* ---- real contact form (FormSubmit) + cinematic signal ---- */
+PANELS.comms=()=>openPanel('COMMS ARRAY — TRANSMIT TO SHREYA',
+  `<h2>Let's connect.</h2><div class="sub hudfont">SHE IS EAGER TO TALK — NETWORK · ROLES · IDEAS · COLLABS</div>
+   <p>Write a transmission below. It travels through deep space straight to <b>Shreya's inbox</b> — and you'll receive a confirmation that she'll get back to you soon.</p>
+   <div class="field"><label class="hudfont">YOUR NAME / CALLSIGN</label><input id="txName" placeholder="Cmdr. Jane Doe"></div>
+   <div class="field"><label class="hudfont">YOUR EMAIL (FOR HER REPLY)</label><input id="txEmail" type="email" placeholder="you@earth.com"></div>
+   <div class="field"><label class="hudfont">MESSAGE</label><textarea id="txMsg" placeholder="Hi Shreya — loved the universe. Let's talk about…"></textarea></div>
+   <button class="transmit hudfont" id="txBtn">▲ TRANSMIT TO EARTH ▲</button>
+   <div class="hbtns" style="margin-top:18px">
+     <a class="hbtn hudfont" href="mailto:${DATA.email}">DIRECT EMAIL</a>
+     <a class="hbtn ghost hudfont" href="tel:${DATA.phone.replace(/\\s/g,'')}">CALL ${DATA.phone}</a>
+     <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">LINKEDIN ↗</a>
+     <a class="hbtn ghost hudfont" href="${DATA.github}" target="_blank" rel="noopener">GITHUB ↗</a>
+     <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a></div>`);
+transmit=function(nm,msg){
+  const em=($('#txEmail')&&$('#txEmail').value||'').trim();
+  lastCallsign=nm;saveState();
+  signals.push({x:ST.x,y:ST.y-60,t:0});
+  objective('TRANSMISSION EN ROUTE — <b>TRACKING SIGNAL</b>');cam.mode='free';
+  fetch('https://formsubmit.co/ajax/'+DATA.email,{method:'POST',
+    headers:{'Content-Type':'application/json',Accept:'application/json'},
+    body:JSON.stringify({name:nm,email:em||'no-reply@station.local',message:msg,
+      _subject:'🛰 Transmission from '+nm+' — portfolio universe',
+      _autoresponse:'SIGNAL RECEIVED ◈ Hi! This is Shreya Thakur — your transmission reached my station. Thank you for exploring my universe; I will get back to you very soon. Until then: shreyathakurindia@gmail.com · github.com/ShreyaThakur05 — Shreya ✦'})})
+  .then(r=>{if(!r.ok)throw 0;
+    setTimeout(()=>{toast('◈ <b>SIGNAL RECEIVED ON EARTH</b> — Shreya has your message · confirmation sent to your inbox');ach('tx')},3400)})
+  .catch(()=>{setTimeout(()=>{
+    toast('◈ Relay busy — opening your mail client as backup');
+    location.href='mailto:'+DATA.email+'?subject='+encodeURIComponent('Transmission from '+nm)+'&body='+encodeURIComponent(msg)},3400)});
+};
+
+/* ---- BOARDING PASS · shareable PNG + her contact card ---- */
+function buildPass(){
+  const c=document.createElement('canvas');c.width=1080;c.height=640;const x=c.getContext('2d');
+  const grd=x.createLinearGradient(0,0,1080,640);
+  grd.addColorStop(0,'#050A16');grd.addColorStop(.6,'#0A1426');grd.addColorStop(1,'#101A33');
+  x.fillStyle=grd;x.fillRect(0,0,1080,640);
+  for(let i=0;i<140;i++){x.globalAlpha=rnd(.15,.8);x.fillStyle='#CFE7FF';
+    x.fillRect(rnd(0,1080),rnd(0,640),rnd(1,2.2),rnd(1,2.2))}
+  x.globalAlpha=1;
+  x.strokeStyle='rgba(111,231,255,.5)';x.lineWidth=2;x.strokeRect(18,18,1044,604);
+  x.strokeStyle='rgba(255,196,107,.6)';x.setLineDash([6,8]);x.strokeRect(30,30,1020,580);x.setLineDash([]);
+  x.fillStyle='#6FE7FF';x.font="600 17px 'Chakra Petch'";
+  x.fillText('MISSION: HUMAN INTELLIGENCE · STATION INTELLECT-01',60,80);
+  x.fillStyle='#FFF';x.font="700 52px 'Chakra Petch'";x.fillText('BOARDING PASS',60,140);
+  x.fillStyle='#FFC46B';x.font="600 15px 'Chakra Petch'";
+  x.fillText('RE-ENTRY: ALWAYS PERMITTED  ·  GATE ∞  ·  SEAT 42A',60,172);
+  const sec=Math.floor((Date.now()-T0)/1000),mm=String(Math.floor(sec/60)).padStart(2,'0'),ss=String(sec%60).padStart(2,'0');
+  const rows=[['VISITOR',(lastCallsign||'EXPLORER').toUpperCase()],['RANK',rankName(progressPct())],
+    ['SURVEYED',visited.size+' / '+TOTAL_DEST+' DESTINATIONS'],['FRAGMENTS',frags.filter(f=>f.got).length+' / 5 ✦'],
+    ['ACHIEVEMENTS',achGot.size+' / '+Object.keys(ACH).length+' 🏆'],['TIME ABOARD',mm+':'+ss]];
+  rows.forEach(([k,v],i)=>{const cx2=60+(i%2)*330,cy2=232+Math.floor(i/2)*72;
+    x.fillStyle='rgba(111,231,255,.55)';x.font="600 12px 'Chakra Petch'";x.fillText(k,cx2,cy2);
+    x.fillStyle='#EAF6FF';x.font="600 24px 'Chakra Petch'";x.fillText(v,cx2,cy2+30)});
+  /* barcode */
+  let bx=60;x.fillStyle='#6FE7FF';
+  while(bx<640){const w2=rnd(2,7);x.globalAlpha=rnd(.4,1);x.fillRect(bx,470,w2,70);bx+=w2+rnd(2,6)}
+  x.globalAlpha=1;
+  /* her contact card */
+  x.strokeStyle='rgba(111,231,255,.35)';x.beginPath();x.moveTo(730,60);x.lineTo(730,580);x.stroke();
+  x.fillStyle='#FFC46B';x.font="600 13px 'Chakra Petch'";x.fillText('YOUR CAPTAIN & GUIDE',760,96);
+  x.fillStyle='#FFF';x.font="700 30px 'Chakra Petch'";x.fillText('SHREYA THAKUR',760,134);
+  x.fillStyle='#9FD8EC';x.font="15px 'Chakra Petch'";
+  x.fillText('Full-Stack & AI/ML Engineer',760,162);
+  x.fillText('IIIT Nagpur · CGPA 8.95',760,186);
+  x.fillStyle='#EAF6FF';x.font="14px 'Chakra Petch'";
+  x.fillText('✉ '+DATA.email,760,232);
+  x.fillText('📞 '+DATA.phone,760,260);
+  x.fillText('⌥ github.com/ShreyaThakur05',760,288);
+  x.fillText('in linkedin.com/in/shreya-thakur',760,316);
+  x.fillStyle='#FFC46B';x.font="italic 15px 'Chakra Petch'";
+  ['"Thank you for exploring my universe —','it keeps growing, so visit again soon.',"Let's connect & build something",'together."','— Shreya ✦'].forEach((l,i)=>x.fillText(l,760,380+i*28));
+  x.fillStyle='rgba(111,231,255,.5)';x.font="11px 'Chakra Petch'";
+  x.fillText('VALID FOREVER · SHARE FREELY · '+new Date().toISOString().slice(0,10),760,560);
+  return c.toDataURL('image/png');
+}
+$('#passBtn').addEventListener('click',()=>{
+  const url=buildPass();ach('pass')||0;
+  openPanel('🎫 YOUR BOARDING PASS',
+   `<img class="pass-img" src="${url}" alt="Mission boarding pass">
+    <p>Your record of this voyage — and Shreya's contact card. Download it, share it, and come back: <b>the station keeps growing.</b></p>
+    <div class="hbtns"><a class="hbtn hudfont" id="passDl" href="${url}" download="shreya-universe-boarding-pass.png">DOWNLOAD PNG ↓</a>
+    <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">CONNECT ON LINKEDIN ↗</a></div>`)});
+
+/* ---- station panel: photo intro ---- */
+PANELS.station=()=>openPanel('PERSONAL CABIN — '+DATA.name,
+  `<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
+     <img src="${DATA.photo}" onerror="this.style.display='none'" alt="Shreya Thakur"
+      style="width:108px;aspect-ratio:4/5;object-fit:cover;border-radius:10px;border:1px solid var(--hud-line);box-shadow:0 0 18px rgba(111,231,255,.2)">
+     <div><h2>${DATA.name}</h2><div class="sub hudfont" style="margin-bottom:8px">${DATA.role} · ${DATA.avail}</div></div>
+   </div>
+   <p>${DATA.tagline}</p>
+   <p style="font-size:12.5px;color:var(--hud-dim)">Her cabin. Touch the objects — each one remembers something.</p>
+   <div class="cab">${DATA.cabin.map((o,i)=>`<button data-cab="${i}"><span class="ico">${o.ico}</span><span class="nm hudfont">${o.nm}</span></button>`).join('')}
+   </div><div class="cab-reveal" id="cabReveal">…</div>
+   <div class="hbtns" style="margin-top:16px"><a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a>
+   <a class="hbtn ghost hudfont" href="${DATA.leetcode}" target="_blank" rel="noopener">LEETCODE ↗</a></div>`);
+PANELS.dossier=()=>openPanel('MISSION DOSSIER — PLAIN TEXT',
+  `<h2>${DATA.name}</h2><div class="sub hudfont">${DATA.role} · ${DATA.avail}</div><p>${DATA.tagline}</p>
+   <p><b>Projects (${DATA.planets.length}):</b></p>${DATA.planets.map(p=>`<p><b>${p.name}</b> — ${p.sub}. ${p.desc}<br><span style="font-size:12px;color:var(--hud-dim)">Stack: ${p.stack.join(', ')} · <a style="color:var(--hud)" href="${p.code}" target="_blank" rel="noopener">GitHub</a>${p.live?' · <a style="color:var(--hud)" href="'+p.live+'" target="_blank" rel="noopener">Live</a>':''}</span></p>`).join('')}
+   <p><b>Skills:</b> ${DATA.galaxy.map(c=>c.name+': '+c.skills.join(', ')).join(' · ')}</p>
+   <p><b>Experience & honors:</b></p>${DATA.missions.map(m=>`<p><b>${m.role}</b> (${m.when} · ${m.org}): ${m.pts.join('; ')}</p>`).join('')}
+   <div class="hbtns"><a class="hbtn hudfont" href="mailto:${DATA.email}">EMAIL</a>
+     <a class="hbtn ghost hudfont" href="tel:${DATA.phone.replace(/\\s/g,'')}">CALL</a>
+     <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a>
+     <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">LINKEDIN</a></div>`);
+ACH.pass='SOUVENIR — printed a boarding pass';
+
+requestAnimationFrame(frame);
+console.log('%cMISSION: HUMAN INTELLIGENCE v2','font-family:monospace;font-size:18px;color:#6FE7FF',
+  '\nShe noticed you opened the console. She approves. → '+DATA.email+'\nP.S. ↑↑↓↓←→←→BA');
+</script>
+</body>
+</html>
