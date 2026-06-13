@@ -69,7 +69,7 @@ html.cursor-on input,html.cursor-on textarea{cursor:text}
 #objective b{color:var(--amber);font-weight:600}
 
 /* NAV trigger */
-.navdock{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:40;display:flex;gap:8px}
+.navdock{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);z-index:75;display:flex;gap:8px}
 #navBtn{font-family:'Chakra Petch';font-weight:600;font-size:12px;letter-spacing:.3em;color:var(--space);background:var(--hud);padding:15px 26px;border-radius:6px;box-shadow:0 0 26px rgba(111,231,255,.3);transition:.2s}
 #navBtn:hover{background:#fff;box-shadow:0 0 36px rgba(111,231,255,.5)}
 #navBtn small{display:block;font-size:8px;letter-spacing:.34em;font-weight:400}
@@ -114,7 +114,7 @@ html.cursor-on input,html.cursor-on textarea{cursor:text}
 .telemetry{width:100%;font-family:'Chakra Petch';font-size:10px;letter-spacing:.18em;color:var(--hud-dim);display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
 .telemetry b{color:var(--hud);font-weight:400}
 /* destination list */
-.dest-pane{padding:14px}
+.dest-pane{padding:14px;max-height:380px;overflow-y:auto;scroll-behavior:smooth;scrollbar-width:thin}
 .dest{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;
   padding:13px 14px;border:1px solid transparent;border-radius:8px;transition:.2s;margin-bottom:4px}
 .dest:hover{border-color:var(--hud-line);background:rgba(111,231,255,.05)}
@@ -183,7 +183,7 @@ html.cursor-on input,html.cursor-on textarea{cursor:text}
 #bubble{position:fixed;z-index:44;max-width:250px;background:var(--glass);border:1px solid var(--hud-line);backdrop-filter:blur(8px);border-radius:10px;padding:10px 13px;font-size:12.5px;color:#CFE7F5;line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none}
 #bubble.show{opacity:1;transform:none}
 #bubble .who{font-family:'Chakra Petch';font-size:8.5px;letter-spacing:.3em;color:var(--green);display:block;margin-bottom:3px}
-#toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,90px);z-index:70;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--hud-line);color:var(--ink);font-family:'Chakra Petch';font-size:11px;letter-spacing:.2em;padding:13px 22px;border-radius:99px;transition:transform .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 24px rgba(111,231,255,.18);text-align:center;max-width:92vw}
+#toast{position:fixed;left:50%;bottom:112px;transform:translate(-50%,90px);z-index:70;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--hud-line);color:var(--ink);font-family:'Chakra Petch';font-size:11px;letter-spacing:.2em;padding:13px 22px;border-radius:99px;transition:transform .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 24px rgba(111,231,255,.18);text-align:center;max-width:92vw}
 #toast.show{transform:translate(-50%,0)}
 #toast b{color:var(--amber)}
 
@@ -205,6 +205,21 @@ html.cinema .hud-top,html.cinema .navdock,html.cinema #objective{opacity:0;point
 .dishbar{height:14px;border:1px solid var(--hud-line);border-radius:99px;overflow:hidden;margin:10px 0 16px}
 .dishbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--rose),var(--amber),var(--green));transition:width .1s}
 input[type=range].dial{width:100%;accent-color:var(--amber)}
+/* NAV control strip */
+.nav-controls{display:flex;gap:8px;padding:10px 16px 14px;border-top:1px solid var(--hud-line);flex-wrap:wrap}
+.nc-btn{font-family:'Chakra Petch';font-size:9.5px;letter-spacing:.2em;color:var(--hud-dim);border:1px solid var(--hud-line);background:none;padding:8px 12px;border-radius:4px;flex:1;transition:.2s;min-width:72px;cursor:pointer}
+.nc-btn:hover{color:var(--hud);border-color:var(--hud);box-shadow:0 0 12px rgba(111,231,255,.15)}
+/* dossier tabs */
+.dos-tabs input[type=radio]{display:none}
+.dos-nav{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--hud-line)}
+.dos-nav label{font-family:'Chakra Petch';font-size:10px;letter-spacing:.2em;padding:10px 14px;cursor:pointer;color:var(--hud-dim);border-bottom:2px solid transparent;transition:.2s}
+.dos-nav label:hover{color:var(--hud)}
+.dos-pane{display:none}
+#dt1:checked~.dos-nav label:nth-child(1),#dt2:checked~.dos-nav label:nth-child(2),
+#dt3:checked~.dos-nav label:nth-child(3),#dt4:checked~.dos-nav label:nth-child(4){color:var(--hud);border-bottom-color:var(--hud)}
+#dt1:checked~.dos-body .dos-pane:nth-child(1),#dt2:checked~.dos-body .dos-pane:nth-child(2),
+#dt3:checked~.dos-body .dos-pane:nth-child(3),#dt4:checked~.dos-body .dos-pane:nth-child(4){display:block}
+.dos-body p{margin-bottom:10px}
 @media (max-width:860px){
   .nav-grid{grid-template-columns:1fr}
   .radar-pane{border-right:none;border-bottom:1px solid var(--hud-line)}
@@ -241,9 +256,6 @@ input[type=range].dial{width:100%;accent-color:var(--amber)}
   <div class="hud-right">
     <button class="hud-chip" id="rankChip">◈ <span class="v" id="rankNm">CADET</span> · <span id="rankPct">0</span>%</button>
     <button class="hud-chip" id="fragChip">✦ <span class="v" id="fragCount">0</span>/5</button>
-    <button class="hud-chip" id="passBtn">🎫 BOARDING PASS</button>
-    <button class="hud-chip" id="sndBtn" aria-pressed="false">SOUND: OFF</button>
-    <button class="hud-chip" id="dossierBtn">DOSSIER</button>
   </div>
 </div>
 
@@ -280,6 +292,12 @@ input[type=range].dial{width:100%;accent-color:var(--amber)}
     <div class="engage-row">
       <button id="engage" class="hudfont">▲ ENGAGE THRUSTERS ▲</button>
       <span class="eng-note hudfont">LOCK A TARGET, THEN ENGAGE. SHUTTLE WILL AUTO-DOCK ON ARRIVAL.</span>
+    </div>
+    <div class="nav-controls">
+      <button class="nc-btn hudfont" id="navSndBtn" aria-pressed="false">SOUND: OFF</button>
+      <button class="nc-btn hudfont" id="navDosBtn">DOSSIER</button>
+      <button class="nc-btn hudfont" id="navPassBtn">🎫 PASS</button>
+      <button class="nc-btn hudfont" id="navCommsBtn">COMMS ▸</button>
     </div>
   </div>
 </div>
@@ -539,15 +557,16 @@ const s2w=(x,y)=>[(x-W/2)/cam.z+cam.x,(y-H/2)/cam.z+cam.y];
 
 /* world layout */
 const ST={x:0,y:0};
-const PANG=[-0.55,0.05,0.62,1.22,1.86,2.98,3.55,4.12,4.72,5.38,0.33,1.54,2.46,3.24,4.42,5.72];
-const PRAD=[1520,2080,1500,2020,1560,2120,1540,2060,1500,2100,2550,1760,2480,1700,2420,1740];
+/* clean 2-ring layout: 8 inner @ r=1700, 8 outer @ r=2300 (offset by π/8) */
+const PANG=[0,.785,1.571,2.356,3.142,3.927,4.712,5.498,.393,1.178,1.963,2.749,3.534,4.320,5.105,5.890];
+const PRAD=[1700,1700,1700,1700,1700,1700,1700,1700,2300,2300,2300,2300,2300,2300,2300,2300];
 const planets=DATA.planets.map((p,i)=>({...p,
   x:Math.cos(PANG[i%PANG.length])*PRAD[i%PANG.length],
   y:Math.sin(PANG[i%PANG.length])*PRAD[i%PANG.length]*.78,
   r:102+(i%4)*13,spin:rnd(0,TAU)}));
 const VAULT={...DATA.vault,x:Math.cos(2.42)*3150,y:Math.sin(2.42)*3150*.78,r:118,spin:0,hue:0,vaultP:true};
 let vaultOpen=false;
-const GAL={x:-1560,y:1140}, RELAY={x:160,y:-1380}, EARTH={x:-4000,y:-340}, HOLE={x:3500,y:2500};
+const GAL={x:-1560,y:1140}, RELAY={x:160,y:-1380}, EARTH={x:-4000,y:-340,r:68}, HOLE={x:3500,y:2500};
 const gstars=[];
 const GCLUST=[{x:0,y:-320},{x:305,y:-99},{x:188,y:259},{x:-188,y:259},{x:-305,y:-99}];
 DATA.galaxy.forEach((c,ci)=>{
@@ -567,6 +586,7 @@ const DEST=[
   ...planets.map((p,i)=>({key:'p'+i,nm:p.name,ty:'PLANET · '+p.ty,pos:()=>p,z:.85})),
   {key:'galaxy',nm:'SKILL GALAXY',ty:'STAR CLUSTER · SKILLS',pos:()=>GAL,z:.78},
   {key:'missions',nm:'MISSION RELAY',ty:'BEACON · EXPERIENCE',pos:()=>RELAY,z:.9},
+  {key:'earth',nm:'EARTH — HOME BASE',ty:'HOME WORLD · ABOUT SHREYA',pos:()=>EARTH,z:.92},
   {key:'comms',nm:'COMMS ARRAY',ty:'STATION · CONTACT',pos:()=>({x:ST.x,y:ST.y}),z:.95}
 ];
 function addVaultDest(){if(DEST.some(d=>d.key==='pv'))return;
@@ -596,9 +616,17 @@ function sweep(){if(!sndOn||!AC)return;const o=AC.createOscillator(),gn=AC.creat
   o.frequency.setValueAtTime(300,AC.currentTime);o.frequency.exponentialRampToValueAtTime(2400,AC.currentTime+1.1);
   gn.gain.setValueAtTime(.06,AC.currentTime);gn.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+1.2);
   o.connect(gn);gn.connect(AC.destination);o.start();o.stop(AC.currentTime+1.2)}
-$('#sndBtn').addEventListener('click',()=>{audio();sndOn=!sndOn;
+function arpeggio(){if(!sndOn||!AC)return;
+  [880,1108,1320,1760,2200].forEach((f,i)=>setTimeout(()=>blip(f,.11,.042),i*80))}
+function theremin(){if(!sndOn||!AC)return;
+  const o=AC.createOscillator(),lfo=AC.createOscillator(),lfg=AC.createGain(),gn=AC.createGain();
+  o.type='sine';o.frequency.value=420;lfo.type='sine';lfo.frequency.value=7;lfg.gain.value=55;
+  lfo.connect(lfg);lfg.connect(o.frequency);
+  gn.gain.setValueAtTime(.04,AC.currentTime);gn.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+.9);
+  o.connect(gn);gn.connect(AC.destination);o.start();o.stop(AC.currentTime+.9);lfo.start();lfo.stop(AC.currentTime+.9)}
+$('#navSndBtn').addEventListener('click',()=>{audio();sndOn=!sndOn;
   ambGain.gain.linearRampToValueAtTime(sndOn?.05:0,AC.currentTime+.8);
-  $('#sndBtn').textContent='SOUND: '+(sndOn?'ON':'OFF');$('#sndBtn').setAttribute('aria-pressed',sndOn);blip(660)});
+  $('#navSndBtn').textContent='SOUND: '+(sndOn?'ON':'OFF');$('#navSndBtn').setAttribute('aria-pressed',sndOn);blip(660)});
 
 /* particles */
 const parts=[],meteors=[],signals=[];
@@ -619,8 +647,9 @@ function say(txt,who,ms=4200){$('#bubbleTxt').textContent=txt;
 
 /* hologram panel */
 const panel=$('#panel'),pT=$('#panelTitle'),pB=$('#panelBody');
-function openPanel(t,h){pT.textContent=t;pB.innerHTML=h;panel.classList.add('open');pB.scrollTop=0;blip(990)}
-function closePanel(){panel.classList.remove('open')}
+let panelCamShift=0,panelCamShiftT=0;
+function openPanel(t,h){pT.textContent=t;pB.innerHTML=h;panel.classList.add('open');pB.scrollTop=0;blip(990);panelCamShiftT=200}
+function closePanel(){panel.classList.remove('open');panelCamShiftT=0}
 $('#panelClose').addEventListener('click',closePanel);
 const esc=s=>s.replace(/</g,'&lt;');
 const PANELS={
@@ -674,7 +703,8 @@ function transmit(nm,msg){
   cam.mode='free';
   setTimeout(()=>{toast('◈ <b>SIGNAL RECEIVED ON EARTH</b> — opening your mail client');
     location.href='mailto:'+DATA.email+'?subject='+encodeURIComponent('Transmission from '+nm)+'&body='+encodeURIComponent(msg)},3400)}
-$('#dossierBtn').addEventListener('click',()=>PANELS.dossier());
+$('#navDosBtn').addEventListener('click',()=>{navClose();PANELS.dossier()});
+$('#navCommsBtn').addEventListener('click',()=>{navClose();PANELS.comms()});
 $('#fragChip').addEventListener('click',()=>toast('✦ Fragments hide in deep space — <b>'+frags.filter(f=>f.got).length+'/5</b> found. Drag around and look!'));
 
 /* ═══ NAV COMPUTER ═══ */
@@ -715,6 +745,9 @@ function buildNav(){
       <span class="dist">${au} AU<br><span class="st ${visited.has(d.key)?'':'unv'}">${visited.has(d.key)?'◈ SURVEYED':'○ UNSURVEYED'}</span></span>
     </button>`}).join('');
   $$('.dest').forEach(b=>b.addEventListener('click',()=>lockDest(b.dataset.key)));
+  if(DEST.length>6){const hint=document.createElement('p');
+    hint.style.cssText='text-align:center;font-family:Chakra Petch;font-size:9px;letter-spacing:.22em;color:var(--hud-dim);padding:8px 0 4px';
+    hint.textContent='▼ scroll for more destinations';destList.appendChild(hint)}
   if(lockedKey)lockDest(lockedKey,true);
 }
 function lockDest(key,silent){
@@ -863,6 +896,7 @@ function updAlien(dt){
 let busy=false;
 function pointsFor(key){
   if(key==='station'||key==='comms')return{SP:{x:ST.x+170,y:ST.y+30},LP:{x:ST.x+40,y:ST.y+96},AP:{x:ST.x+170,y:ST.y+330}};
+  if(key==='earth')return{SP:{x:EARTH.x+80,y:EARTH.y-EARTH.r-44},LP:{x:EARTH.x-10,y:EARTH.y-EARTH.r-30},AP:{x:EARTH.x+80,y:EARTH.y-EARTH.r-300}};
   if(key.startsWith('p')){const p=key==='pv'?VAULT:planets[+key.slice(1)];
     return{SP:{x:p.x+86,y:p.y-p.r-44},LP:{x:p.x-10,y:p.y-p.r-30},AP:{x:p.x+86,y:p.y-p.r-330}}}
   if(key==='galaxy')return{SP:{x:GAL.x+120,y:GAL.y+270},LP:{x:GAL.x,y:GAL.y+240},AP:{x:GAL.x+120,y:GAL.y+560}};
@@ -870,6 +904,7 @@ function pointsFor(key){
 }
 function greetLine(key){
   if(key==='station')return "Home! Welcome to her station. The cabin is full of memories.";
+  if(key==='earth')return "Earth! You made it all the way home. This is Shreya's corner of the universe — the person behind all those planets.";
   if(key==='comms')return "The COMMS array! Earth is *that* way. Say something nice — she actually replies!";
   if(key==='galaxy')return "The Skill Galaxy! Every star is something she's mastered.";
   if(key==='missions')return "The Mission Relay. Amazon, internships, hackathon wins — all logged here.";
@@ -927,6 +962,7 @@ function launch(key){
     cam.mode='astro';cam.tz=DEST.find(d=>d.key===key).z;
     alien.cmd=null;alien.mood='happy';alien.moodT=4;
     if(key==='station'){PANELS.station();objective('CABIN — <b>TOUCH HER OBJECTS</b>')}
+    if(key==='earth'){PANELS.station();objective('EARTH — <b>HOME WORLD · HER STORY</b>')}
     if(key==='comms'){PANELS.comms();grow('comm');objective('COMMS — <b>TRANSMIT TO SHREYA</b>')}
     if(key==='pv'){PANELS.vault();setBeh('thumbs');objective('VAULT OPENED — <b>CLASSIFIED PROJECT</b>');ach('vault')}
     else if(key.startsWith('p')){const pi=+key.slice(1);PANELS.p(pi);growLab(pi);setBeh('thumbs');
@@ -984,9 +1020,9 @@ function worldClick(){
     saveState();
     return}
   if(Math.hypot(wmx-alien.x,wmy-alien.y)<48){alien.mood='dance';alien.moodT=3;ach('contact');
-    say(DATA.alienLines[(Math.random()*DATA.alienLines.length)|0]);blip(1100,.1);return}
+    say(DATA.alienLines[(Math.random()*DATA.alienLines.length)|0]);theremin();return}
   if(Math.hypot(wmx-astro.x,wmy-astro.y)<64&&!astro.hidden){setBeh('wave');ach('hello');
-    say(DATA.heroLine,'her');blip(840);burst(astro.x,astro.y-20,10,'111,231,255',.7);return}
+    say(DATA.heroLine,'her');arpeggio();burst(astro.x,astro.y-20,10,'111,231,255',.7);return}
   if(vaultOpen&&Math.hypot(VAULT.x-wmx,VAULT.y-wmy)<VAULT.r+34){
     if(astro.onKey==='pv'){PANELS.vault();blip(990);return}
     navOpen();lockDest('pv');return}
@@ -997,6 +1033,9 @@ function worldClick(){
   if(Math.hypot(wmx-(ST.x-30),wmy-(ST.y-62))<34){openDishPuzzle();return}
   const ghHit=ghAt(wmx,wmy);
   if(ghHit){window.open(ghHit.gh.url,'_blank');blip(900,.08);return}
+  if(Math.hypot(wmx-EARTH.x,wmy-EARTH.y)<EARTH.r+40){
+    if(astro.onKey==='earth'){PANELS.station();blip(990);return}
+    navOpen();lockDest('earth');return}
   if(Math.hypot(wmx-GAL.x,wmy-GAL.y)<330){navOpen();lockDest('galaxy');return}
   if(Math.hypot(wmx-RELAY.x,wmy-RELAY.y)<150){navOpen();lockDest('missions');return}
   if(Math.hypot(wmx-ST.x,wmy-ST.y)<210){navOpen();lockDest('station');return}
@@ -1022,7 +1061,8 @@ function begin(){if(intro.classList.contains('gone'))return;
   intro.classList.add('gone');sessionStorage.setItem('boarded2','1');
   cam.tz=.85;objective('BOARD COMPLETE — <b>OPEN NAV COMPUTER [N]</b>');
   setTimeout(()=>toast('◈ Your cursor is a <b>SCANNER</b> — when a label appears next to the ring, you can click that thing'),900);
-  setTimeout(()=>say("Blip! I'm "+DATA.alienName+". She's right there — click her, she loves visitors."),3200)}
+  setTimeout(()=>say("Blip! I'm "+DATA.alienName+". She's right there — click her, she loves visitors."),3200);
+  setTimeout(()=>{if(!panel.classList.contains('open'))PANELS.station()},7000)}
 if(reduced||sessionStorage.getItem('boarded2')){intro.classList.add('gone');cam.z=cam.tz=.85}
 else{$$('#intro .ln').forEach((l,i)=>setTimeout(()=>{l.classList.add('on');blip(440+i*60,.06,.03)},500+i*620));
   setTimeout(()=>$('#enterBtn').classList.add('on'),500+5*620);
@@ -1432,8 +1472,10 @@ function frame(now){
     const ds=Math.hypot(d.x-astro.x,d.y-astro.y);
     if(ds<64&&!astro.hidden){d.vx+=(d.x-astro.x)/ds*.12;d.vy+=(d.y-astro.y)/ds*.12}}});
   /* camera */
-  if(cam.mode==='astro'){cam.tx=astro.x;cam.ty=astro.y}
-  if(cam.mode==='shuttle'){cam.tx=shuttle.x;cam.ty=shuttle.y;cam.tz=.78}
+  panelCamShift=lerp(panelCamShift,panelCamShiftT,.05*dt);
+  const _pOff=cam.z>0.01?panelCamShift/cam.z:0;
+  if(cam.mode==='astro'){cam.tx=astro.x-_pOff;cam.ty=astro.y}
+  if(cam.mode==='shuttle'){cam.tx=shuttle.x-_pOff;cam.ty=shuttle.y;cam.tz=.78}
   cam.x=lerp(cam.x,cam.tx,.06*dt);cam.y=lerp(cam.y,cam.ty,.06*dt);cam.z=lerp(cam.z,cam.tz,.06*dt);
   /* draw */
   g.clearRect(0,0,W,H);
@@ -1464,11 +1506,41 @@ function frame(now){
   g.globalAlpha=1;
   /* earth */
   const[ex,ey]=w2s(EARTH.x,EARTH.y);
-  if(!off(ex,ey,80)){const r=26*cam.z;const bd=g.createRadialGradient(ex-r*.3,ey-r*.3,1,ex,ey,r);
-    bd.addColorStop(0,'#7FD4FF');bd.addColorStop(.6,'#1F6FBF');bd.addColorStop(1,'#0A2A55');
-    g.fillStyle=bd;g.beginPath();g.arc(ex,ey,r,0,TAU);g.fill();
-    g.font="9px 'Chakra Petch'";g.textAlign='center';g.fillStyle='rgba(127,212,255,.7)';
-    g.fillText('EARTH — HOME',ex,ey+r+16);g.textAlign='left'}
+  if(!off(ex,ey,EARTH.r*cam.z+60)){const er=EARTH.r*cam.z;
+    /* atmosphere rim */
+    g.save();
+    const atm=g.createRadialGradient(ex,ey,er*.88,ex,ey,er*1.28);
+    atm.addColorStop(0,'rgba(100,180,255,.22)');atm.addColorStop(1,'transparent');
+    g.fillStyle=atm;g.beginPath();g.arc(ex,ey,er*1.28,0,TAU);g.fill();
+    /* ocean */
+    const oce=g.createRadialGradient(ex-er*.25,ey-er*.25,1,ex,ey,er);
+    oce.addColorStop(0,'#5AC8FA');oce.addColorStop(.5,'#1A6BBF');oce.addColorStop(1,'#0B2650');
+    g.fillStyle=oce;g.beginPath();g.arc(ex,ey,er,0,TAU);g.fill();
+    /* continent patches */
+    g.fillStyle='rgba(72,158,80,.78)';
+    [[-.3,-.2,.42,.28],[.15,-.35,.3,.22],[-.1,.2,.35,.18],[.28,.1,.22,.32]].forEach(([dx,dy,rw,rh])=>{
+      g.beginPath();g.ellipse(ex+dx*er,ey+dy*er,rw*er,rh*er,dx+T*.02,0,TAU);g.fill()});
+    /* ice cap */
+    g.fillStyle='rgba(220,240,255,.72)';g.beginPath();g.ellipse(ex,ey-er*.82,er*.38,er*.18,0,0,TAU);g.fill();
+    /* cloud layer */
+    if(!QLOW){g.globalAlpha=.38;g.fillStyle='#E8F4FF';
+      [[.2,-.5,.42,.12],[-.35,-.1,.38,.1],[.1,.45,.44,.11],[-.15,.3,.3,.09]].forEach(([dx,dy,rw,rh])=>{
+        g.beginPath();g.ellipse(ex+dx*er,ey+dy*er,rw*er,rh*er,dx+T*.012,0,TAU);g.fill()});
+      g.globalAlpha=1}
+    /* city lights on night side */
+    if(!QLOW){g.globalAlpha=.6;
+      [[.45,0],[.55,.3],[.38,-.2],[.6,-.25]].forEach(([dx,dy])=>{
+        g.fillStyle='rgba(255,220,130,.85)';g.beginPath();g.arc(ex+dx*er,ey+dy*er,1.4*cam.z,0,TAU);g.fill()});
+      g.globalAlpha=1}
+    /* highlight */
+    const hl=g.createRadialGradient(ex-er*.32,ey-er*.32,1,ex,ey,er);
+    hl.addColorStop(0,'rgba(255,255,255,.22)');hl.addColorStop(.55,'transparent');
+    g.fillStyle=hl;g.beginPath();g.arc(ex,ey,er,0,TAU);g.fill();
+    g.restore();
+    /* label */
+    g.font=`${Math.max(8,9*cam.z)|0}px 'Chakra Petch'`;g.textAlign='center';
+    g.fillStyle=astro.onKey==='earth'?'rgba(111,231,255,.9)':'rgba(127,212,255,.65)';
+    g.fillText(astro.onKey==='earth'?'CLICK TO REOPEN':'EARTH — HOME',ex,ey+er+18*cam.z);g.textAlign='left'}
   /* black hole */
   const[hx,hy]=w2s(HOLE.x,HOLE.y);
   if(!off(hx,hy,200)){const r=60*cam.z;g.save();g.translate(hx,hy);g.rotate(T*.5);
@@ -1570,6 +1642,7 @@ function hoverCheck(){
   else if(!astro.hidden&&Math.hypot(wmx-astro.x,wmy-astro.y)<64){hover='astro';lbl='SAY HI'}
   else if(Math.hypot(wmx-(ST.x-30),wmy-(ST.y-62))<34){hover='dish';lbl='ALIGN DISH'}
   else if((hover=ghAt(wmx,wmy))){lbl='OPEN REPO ★'+hover.gh.stars}
+  else if(Math.hypot(wmx-EARTH.x,wmy-EARTH.y)<EARTH.r+40){hover='earth';lbl=astro.onKey==='earth'?'REOPEN CABIN':'TARGET EARTH'}
   else if(Math.hypot(wmx-ST.x,wmy-ST.y)<210){hover='station';lbl='TARGET STATION'}
   else if(Math.hypot(wmx-RELAY.x,wmy-RELAY.y)<150){hover='beacon';lbl='TARGET RELAY'}
   if(hover==='alien'){petT+=_dt/60;if(petT>0.85&&alien.mood!=='pet'){alien.mood='pet';alien.moodT=2.5;ach('pet');
@@ -1591,12 +1664,34 @@ function qTick(now){const ms=now-_qLast;_qLast=now;_qAcc+=ms;_qN++;
 
 /* ---- sun + lens flare ---- */
 const SUN={x:2300,y:-2150};
-function drawSunWorld(){const[sx2,sy2]=w2s(SUN.x,SUN.y);if(off(sx2,sy2,700))return;
-  const r=90*cam.z;const gl=g.createRadialGradient(sx2,sy2,0,sx2,sy2,r*6);
-  gl.addColorStop(0,'rgba(255,240,200,.9)');gl.addColorStop(.08,'rgba(255,220,150,.5)');
-  gl.addColorStop(.3,'rgba(255,190,110,.12)');gl.addColorStop(1,'transparent');
-  g.fillStyle=gl;g.beginPath();g.arc(sx2,sy2,r*6,0,TAU);g.fill();
-  g.fillStyle='#FFF6E0';g.beginPath();g.arc(sx2,sy2,r*.5,0,TAU);g.fill()}
+function drawSunWorld(){const[sx2,sy2]=w2s(SUN.x,SUN.y);if(off(sx2,sy2,800))return;
+  const r=90*cam.z,pulse=1+Math.sin(T*1.8)*.04;
+  /* outer corona glow */
+  const gl=g.createRadialGradient(sx2,sy2,0,sx2,sy2,r*7);
+  gl.addColorStop(0,'rgba(255,252,220,.96)');gl.addColorStop(.05,'rgba(255,230,160,.7)');
+  gl.addColorStop(.18,'rgba(255,190,80,.18)');gl.addColorStop(.45,'rgba(255,140,40,.05)');
+  gl.addColorStop(1,'transparent');
+  g.fillStyle=gl;g.beginPath();g.arc(sx2,sy2,r*7,0,TAU);g.fill();
+  /* corona pulse rings */
+  if(!QLOW){for(let i=0;i<3;i++){
+    const rr=r*(1.08+i*.38+Math.sin(T*1.5+i*1.1)*.05)*pulse;
+    g.strokeStyle=`rgba(255,${200-i*20},${90-i*25},${.15-i*.04})`;
+    g.lineWidth=Math.max(1,(2.5-i*.7)*cam.z);
+    g.beginPath();g.arc(sx2,sy2,rr,0,TAU);g.stroke()}
+  /* solar flare arcs */
+  for(let i=0;i<4;i++){
+    const a=T*.35+i*TAU/4,len=(r*.55+Math.sin(T*1.9+i*1.6)*r*.28);
+    const ca=Math.cos(a),sa=Math.sin(a);
+    const cpx=sx2+(ca+Math.cos(a+.65)*.55)*(r*.82+len*.5);
+    const cpy=sy2+(sa+Math.sin(a+.65)*.55)*(r*.82+len*.5);
+    g.strokeStyle=`rgba(255,175,70,${.11+Math.sin(T*1.2+i)*.05})`;
+    g.lineWidth=Math.max(1.2,2.5*cam.z);g.beginPath();
+    g.moveTo(sx2+ca*r*.78,sy2+sa*r*.78);
+    g.quadraticCurveTo(cpx,cpy,sx2+ca*(r*.78+len),sy2+sa*(r*.78+len));g.stroke()}}
+  /* core */
+  const cr=g.createRadialGradient(sx2-r*.18,sy2-r*.18,1,sx2,sy2,r*pulse);
+  cr.addColorStop(0,'#FFFDF0');cr.addColorStop(.4,'#FFF2A0');cr.addColorStop(1,'#FFD040');
+  g.fillStyle=cr;g.beginPath();g.arc(sx2,sy2,r*pulse,0,TAU);g.fill()}
 function drawFlareScreen(){if(QLOW)return;
   const[sx2,sy2]=w2s(SUN.x,SUN.y);
   if(sx2<-300||sx2>W+300||sy2<-300||sy2>H+300)return;
@@ -1682,7 +1777,7 @@ say=function(txt,who,ms){bubble.classList.toggle('her',who==='her');
 
 /* ---- rank · achievements · persistence ---- */
 const ACH={hello:'FIRST WORDS — said hi to Shreya',contact:'FIRST CONTACT — poked LUMEN',
-  pilot:'PILOT — completed a planetfall',surveyor:'SURVEYOR — visited all 10 planets',
+  pilot:'PILOT — completed a planetfall',surveyor:'SURVEYOR — visited all 16 planets',
   collector:'COLLECTOR — found all 5 fragments',vault:'CLEARANCE ◆ — opened the Vault',
   gamer:'SIGNAL MASTER — aligned the dish',ace:'ACE PILOT — clean asteroid run',
   fetch:'GOOD HUMAN — played fetch with LUMEN',pet:'SOFT SPOT — petted LUMEN',
@@ -1871,7 +1966,7 @@ function buildPass(){
   x.fillText('VALID FOREVER · SHARE FREELY · '+new Date().toISOString().slice(0,10),760,560);
   return c.toDataURL('image/png');
 }
-$('#passBtn').addEventListener('click',()=>{
+$('#navPassBtn').addEventListener('click',()=>{navClose();
   const url=buildPass();ach('pass')||0;
   openPanel('🎫 YOUR BOARDING PASS',
    `<img class="pass-img" src="${url}" alt="Mission boarding pass">
@@ -1892,15 +1987,40 @@ PANELS.station=()=>openPanel('PERSONAL CABIN — '+DATA.name,
    </div><div class="cab-reveal" id="cabReveal">…</div>
    <div class="hbtns" style="margin-top:16px"><a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a>
    <a class="hbtn ghost hudfont" href="${DATA.leetcode}" target="_blank" rel="noopener">LEETCODE ↗</a></div>`);
-PANELS.dossier=()=>openPanel('MISSION DOSSIER — PLAIN TEXT',
-  `<h2>${DATA.name}</h2><div class="sub hudfont">${DATA.role} · ${DATA.avail}</div><p>${DATA.tagline}</p>
-   <p><b>Projects (${DATA.planets.length}):</b></p>${DATA.planets.map(p=>`<p><b>${p.name}</b> — ${p.sub}. ${p.desc}<br><span style="font-size:12px;color:var(--hud-dim)">Stack: ${p.stack.join(', ')} · <a style="color:var(--hud)" href="${p.code}" target="_blank" rel="noopener">GitHub</a>${p.live?' · <a style="color:var(--hud)" href="'+p.live+'" target="_blank" rel="noopener">Live</a>':''}</span></p>`).join('')}
-   <p><b>Skills:</b> ${DATA.galaxy.map(c=>c.name+': '+c.skills.join(', ')).join(' · ')}</p>
-   <p><b>Experience & honors:</b></p>${DATA.missions.map(m=>`<p><b>${m.role}</b> (${m.when} · ${m.org}): ${m.pts.join('; ')}</p>`).join('')}
-   <div class="hbtns"><a class="hbtn hudfont" href="mailto:${DATA.email}">EMAIL</a>
-     <a class="hbtn ghost hudfont" href="tel:${DATA.phone.replace(/\\s/g,'')}">CALL</a>
-     <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a>
-     <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">LINKEDIN</a></div>`);
+PANELS.dossier=()=>openPanel('MISSION DOSSIER',
+  `<div class="dos-tabs">
+   <input type="radio" name="dos" id="dt1" checked>
+   <input type="radio" name="dos" id="dt2">
+   <input type="radio" name="dos" id="dt3">
+   <input type="radio" name="dos" id="dt4">
+   <div class="dos-nav">
+     <label for="dt1" class="hudfont">PROFILE</label>
+     <label for="dt2" class="hudfont">PROJECTS</label>
+     <label for="dt3" class="hudfont">SKILLS</label>
+     <label for="dt4" class="hudfont">MISSIONS</label>
+   </div>
+   <div class="dos-body">
+     <div class="dos-pane">
+       <h2>${DATA.name}</h2><div class="sub hudfont">${DATA.role} · ${DATA.avail}</div>
+       <p>${DATA.tagline}</p>
+       <div class="hbtns"><a class="hbtn hudfont" href="mailto:${DATA.email}">EMAIL</a>
+         <a class="hbtn ghost hudfont" href="${DATA.resume}" target="_blank" rel="noopener" download>RESUME ↓</a>
+         <a class="hbtn ghost hudfont" href="${DATA.linkedin}" target="_blank" rel="noopener">LINKEDIN ↗</a>
+         <a class="hbtn ghost hudfont" href="${DATA.github}" target="_blank" rel="noopener">GITHUB ↗</a></div>
+     </div>
+     <div class="dos-pane">
+       <p style="font-size:12px;color:var(--hud-dim);margin-bottom:12px">${DATA.planets.length} PLANETS CATALOGUED</p>
+       ${DATA.planets.map(p=>`<p style="margin-bottom:8px"><b style="color:var(--ink)">${p.name}</b> <span style="font-size:11px;color:var(--amber)">${p.ty}</span><br><span style="font-size:12.5px;color:#B9CFE0">${p.sub}</span><br><span style="font-size:11px;color:var(--hud-dim)">${p.stack.join(' · ')} · <a style="color:var(--hud)" href="${p.code}" target="_blank" rel="noopener">GitHub</a>${p.live&&p.live!==p.code?' · <a style="color:var(--hud)" href="'+p.live+'" target="_blank" rel="noopener">Live</a>':''}</span></p>`).join('')}
+     </div>
+     <div class="dos-pane">
+       ${DATA.galaxy.map(c=>`<div class="kv"><span class="k hudfont" style="color:${c.color}">${c.name}</span><span class="v">${c.skills.join(' · ')}</span></div>`).join('')}
+     </div>
+     <div class="dos-pane">
+       ${DATA.missions.map(m=>`<div class="mission"><span class="st hudfont">◈ ${m.st}</span><h3>${m.role}</h3><div class="org hudfont">${m.when} · ${m.org}</div><ul>${m.pts.map(p=>`<li>${p}</li>`).join('')}</ul></div>`).join('')}
+       <div class="hbtns"><a class="hbtn ghost hudfont" href="tel:${DATA.phone.replace(/\\s/g,'')}">CALL</a></div>
+     </div>
+   </div>
+   </div>`);
 ACH.pass='SOUVENIR — printed a boarding pass';
 
 requestAnimationFrame(frame);
